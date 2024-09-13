@@ -1,0 +1,3 @@
+[submodule "jid-notes"]
+	path = jid-notes
+	url = git@github.com:Laroikin/jid-notes.git
