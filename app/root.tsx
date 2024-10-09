@@ -14,7 +14,7 @@ import {
   useLoaderData
 } from '@remix-run/react';
 import type { LinksFunction, LoaderFunctionArgs } from '@remix-run/node';
-import './tailwind.css';
+import '~/tailwind.css';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { getTheme } = await themeSessionResolver(request);
@@ -58,7 +58,7 @@ function Layout() {
         <PreventFlashOnWrongTheme ssrTheme={Boolean(data.theme)} />
         <Links />
       </head>
-      <body className="bg-background">
+      <body>
         <Outlet />
         <ScrollRestoration />
         <Scripts />

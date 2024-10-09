@@ -1,55 +1,51 @@
-import Link from "next/link"
-import { ChevronRight, Search, type LucideIcon } from "lucide-react"
+import { Link } from '@remix-run/react';
+import { ChevronRight, Search, type LucideIcon } from 'lucide-react';
 
-import { useIsMobile } from "~/hooks/use-mobile"
-import { cn } from "~/lib/utils"
-import { Button } from "~/components/ui/button"
+import { useIsMobile } from '~/hooks/use-mobile';
+import { cn } from '~/lib/utils';
+import { Button } from '~/components/ui/button';
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger,
-} from "~/components/ui/collapsible"
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "~/components/ui/drawer"
-import { Input } from "~/components/ui/input"
+  CollapsibleTrigger
+} from '~/components/ui/collapsible';
+import { Drawer, DrawerContent, DrawerTrigger } from '~/components/ui/drawer';
+import { Input } from '~/components/ui/input';
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-} from "~/components/ui/popover"
-import { Separator } from "~/components/ui/separator"
+  PopoverTrigger
+} from '~/components/ui/popover';
+import { Separator } from '~/components/ui/separator';
 
 export function NavMain({
   className,
   items,
-  searchResults,
+  searchResults
 }: {
   items: {
-    title: string
-    url: string
-    icon: LucideIcon
-    isActive?: boolean
+    title: string;
+    url: string;
+    icon: LucideIcon;
+    isActive?: boolean;
     items?: {
-      title: string
-      url: string
-    }[]
-  }[]
-  searchResults: React.ComponentProps<typeof SidebarSearch>["results"]
-} & React.ComponentProps<"ul">) {
+      title: string;
+      url: string;
+    }[];
+  }[];
+  searchResults: React.ComponentProps<typeof SidebarSearch>['results'];
+} & React.ComponentProps<'ul'>) {
   return (
-    <ul className={cn("grid gap-0.5", className)}>
+    <ul className={cn('grid gap-0.5', className)}>
       <li>
         <SidebarSearch results={searchResults} />
       </li>
-      {items.map((item) => (
+      {items.map(item => (
         <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
           <li>
             <div className="relative flex items-center">
               <Link
-                href={item.url}
+                to={item.url}
                 className="min-w-8 flex h-8 flex-1 items-center gap-2 overflow-hidden rounded-md px-1.5 text-sm font-medium outline-none ring-ring transition-all hover:bg-accent hover:text-accent-foreground focus-visible:ring-2"
               >
                 <item.icon className="h-4 w-4 shrink-0" />
@@ -69,10 +65,10 @@ export function NavMain({
             </div>
             <CollapsibleContent className="px-4 py-0.5">
               <ul className="grid border-l px-2">
-                {item.items?.map((subItem) => (
+                {item.items?.map(subItem => (
                   <li key={subItem.title}>
                     <Link
-                      href={subItem.url}
+                      to={subItem.url}
                       className="min-w-8 flex h-8 items-center gap-2 overflow-hidden rounded-md px-2 text-sm font-medium text-muted-foreground ring-ring transition-all hover:bg-accent hover:text-accent-foreground focus-visible:ring-2"
                     >
                       <div className="line-clamp-1">{subItem.title}</div>
@@ -85,19 +81,19 @@ export function NavMain({
         </Collapsible>
       ))}
     </ul>
-  )
+  );
 }
 
 function SidebarSearch({
-  results,
+  results
 }: {
   results: {
-    title: string
-    teaser: string
-    url: string
-  }[]
+    title: string;
+    teaser: string;
+    url: string;
+  }[];
 }) {
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
   if (isMobile) {
     return (
@@ -119,9 +115,9 @@ function SidebarSearch({
             </div>
           </form>
           <div className="grid gap-1 p-1.5 text-sm">
-            {results.map((result) => (
+            {results.map(result => (
               <Link
-                href={result.url}
+                to={result.url}
                 key={result.title}
                 className="rounded-md p-2.5 outline-none ring-ring hover:bg-accent hover:text-accent-foreground focus-visible:ring-2"
               >
@@ -133,7 +129,7 @@ function SidebarSearch({
             ))}
             <Separator className="my-1.5" />
             <Link
-              href="#"
+              to="#"
               className="rounded-md px-2.5 py-1 text-muted-foreground outline-none ring-ring hover:text-foreground focus-visible:ring-2"
             >
               See all results
@@ -141,7 +137,7 @@ function SidebarSearch({
           </div>
         </DrawerContent>
       </Drawer>
-    )
+    );
   }
 
   return (
@@ -168,9 +164,9 @@ function SidebarSearch({
           </div>
         </form>
         <div className="grid gap-1 p-1.5 text-sm">
-          {results.map((result) => (
+          {results.map(result => (
             <Link
-              href={result.url}
+              to={result.url}
               key={result.title}
               className="rounded-md p-2.5 outline-none ring-ring hover:bg-accent hover:text-accent-foreground focus-visible:ring-2"
             >
@@ -182,7 +178,7 @@ function SidebarSearch({
           ))}
           <Separator className="my-1.5" />
           <Link
-            href="#"
+            to="#"
             className="rounded-md px-2.5 py-1 text-muted-foreground outline-none ring-ring hover:text-foreground focus-visible:ring-2"
           >
             See all results
@@ -190,5 +186,5 @@ function SidebarSearch({
         </div>
       </PopoverContent>
     </Popover>
-  )
+  );
 }
