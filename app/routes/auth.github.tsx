@@ -9,6 +9,7 @@ export async function loader() {
 export async function action({ request }: ActionFunctionArgs) {
 	console.log(request);
 	return await authenticator.authenticate("github", request, {
-		successRedirect: "/protected",
+		successRedirect: "/dashboard",
+		failureRedirect: "/login?failed=true",
 	});
 }

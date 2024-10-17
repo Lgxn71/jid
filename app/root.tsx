@@ -15,11 +15,17 @@ import {
 } from "remix-themes";
 import { themeSessionResolver } from "./sessions.server";
 import "~/tailwind.css";
+import { authenticator } from "./auth.server";
+import { parse, stringify } from "superjson";
+import type { User } from "@prisma/client";
+import { UserContext } from "./context/userContext";
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const { getTheme } = await themeSessionResolver(request);
+	const user = await authenticator.isAuthenticated(request);
 	return {
 		theme: getTheme(),
+		user: stringify(user),
 	};
 }
 
@@ -47,6 +53,7 @@ export const links: LinksFunction = () => [
 
 function Layout() {
 	const data = useLoaderData<typeof loader>();
+	const user = parse<User | null>(data.user);
 	const [theme] = useTheme();
 
 	return (
@@ -59,7 +66,9 @@ function Layout() {
 				<Links />
 			</head>
 			<body>
-				<Outlet />
+				<UserContext.Provider value={user}>
+					<Outlet />
+				</UserContext.Provider>
 				<ScrollRestoration />
 				<Scripts />
 			</body>

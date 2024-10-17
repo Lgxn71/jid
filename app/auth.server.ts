@@ -47,6 +47,7 @@ export const isLoggedIn = async (request: Request) => {
 	}
 };
 
+
 export const isOnboarded = async (request: Request) => {
 	await isLoggedIn(request);
 	const user = await authenticator.isAuthenticated(request);

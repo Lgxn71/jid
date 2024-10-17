@@ -1,3 +1,5 @@
+import type { User } from "@prisma/client";
+import { Link } from "@remix-run/react";
 import {
 	BadgeCheck,
 	Bell,
@@ -20,11 +22,7 @@ import {
 export function NavUser({
 	user,
 }: {
-	user: {
-		name: string;
-		email: string;
-		// avatar: string;
-	};
+	user: User;
 }) {
 	return (
 		<DropdownMenu>
@@ -32,13 +30,16 @@ export function NavUser({
 				<div className="flex items-center gap-2 px-2 py-1.5 text-left text-sm transition-all">
 					<Avatar className="h-7 w-7 rounded-md border">
 						<AvatarImage
-							alt={user.name}
+							alt={user.firstName}
+							src={user.imageUrl ?? ""}
 							className="animate-in fade-in-50 zoom-in-90"
 						/>
-						<AvatarFallback className="rounded-md">CN</AvatarFallback>
+						<AvatarFallback className="rounded-md">
+							{user.firstName.slice(0, 2).toUpperCase()}
+						</AvatarFallback>
 					</Avatar>
 					<div className="grid flex-1 leading-none">
-						<div className="font-medium">{user.name}</div>
+						<div className="font-medium">{user.firstName}</div>
 						<div className="overflow-hidden text-xs text-muted-foreground">
 							<div className="line-clamp-1">{user.email}</div>
 						</div>
@@ -55,11 +56,13 @@ export function NavUser({
 				<DropdownMenuLabel className="p-0 font-normal">
 					<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm transition-all">
 						<Avatar className="h-7 w-7 rounded-md">
-							{/* <AvatarImage src={user.avatar} alt={user.name} /> */}
-							<AvatarFallback>CN</AvatarFallback>
+							<AvatarImage src={user.imageUrl ?? ""} alt={user.firstName} />
+							<AvatarFallback>
+								{user.firstName.slice(0, 2).toUpperCase()}
+							</AvatarFallback>
 						</Avatar>
 						<div className="grid flex-1">
-							<div className="font-medium">{user.name}</div>
+							<div className="font-medium">{user.firstName}</div>
 							<div className="overflow-hidden text-xs text-muted-foreground">
 								<div className="line-clamp-1">{user.email}</div>
 							</div>
@@ -82,9 +85,11 @@ export function NavUser({
 					</DropdownMenuItem>
 				</DropdownMenuGroup>
 				<DropdownMenuSeparator />
-				<DropdownMenuItem className="gap-2">
-					<LogOut className="h-4 w-4 text-muted-foreground" />
-					Log out
+				<DropdownMenuItem className="gap-2" asChild>
+					<Link to="/auth/logout">
+						<LogOut className="h-4 w-4 text-muted-foreground" />
+						Log out
+					</Link>
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
