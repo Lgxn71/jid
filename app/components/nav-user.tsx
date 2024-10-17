@@ -23,7 +23,7 @@ export function NavUser({
 	user: {
 		name: string;
 		email: string;
-		avatar: string;
+		// avatar: string;
 	};
 }) {
 	return (
@@ -32,7 +32,6 @@ export function NavUser({
 				<div className="flex items-center gap-2 px-2 py-1.5 text-left text-sm transition-all">
 					<Avatar className="h-7 w-7 rounded-md border">
 						<AvatarImage
-							src={user.avatar}
 							alt={user.name}
 							className="animate-in fade-in-50 zoom-in-90"
 						/>
@@ -56,7 +55,7 @@ export function NavUser({
 				<DropdownMenuLabel className="p-0 font-normal">
 					<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm transition-all">
 						<Avatar className="h-7 w-7 rounded-md">
-							<AvatarImage src={user.avatar} alt={user.name} />
+							{/* <AvatarImage src={user.avatar} alt={user.name} /> */}
 							<AvatarFallback>CN</AvatarFallback>
 						</Avatar>
 						<div className="grid flex-1">

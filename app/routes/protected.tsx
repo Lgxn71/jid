@@ -1,5 +1,7 @@
-import type { MetaFunction } from "@remix-run/node";
-import { Link } from "@remix-run/react";
+import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import { Link, useLoaderData } from "@remix-run/react";
+import { parse, stringify } from "superjson";
+import { authenticator } from "~/auth.server";
 
 export const meta: MetaFunction = () => {
 	return [
@@ -7,6 +9,13 @@ export const meta: MetaFunction = () => {
 		{ name: "description", content: "Welcome to Remix!" },
 	];
 };
+
+export async function loader({ request }: LoaderFunctionArgs) {
+	// If the user is already authenticated redirect to /dashboard directly
+	return await authenticator.isAuthenticated(request, {
+		failureRedirect: "/login",
+	});
+}
 
 export default function Index() {
 	return (
@@ -33,6 +42,7 @@ export default function Index() {
 					<p className="leading-6 text-gray-700 dark:text-gray-200">
 						What&apos;s next?
 					</p>
+					{/* {user ? <p>{user.data.user.id}</p> : <p>not logged in</p>} */}
 					<Link to="/check">wow cool route </Link>
 					<ul>
 						{resources.map(({ href, text, icon }) => (
