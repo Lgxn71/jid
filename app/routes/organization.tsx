@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Card } from "~/components/ui/card";
-import { Sun } from "lucide-react";
+import { useNavigate } from "@remix-run/react";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+
+import { Sun } from "lucide-react";
+
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Card } from "~/components/ui/card";
 
 import {
   Form,
@@ -23,9 +27,15 @@ const registerTeamSchema = z.object({
   logo: z.any().optional(),
 });
 
+const joinOrganizationSchema = z.object({
+  teamID: z.string().min(1).max(50),
+});
+
 export default function Page() {
+  const navigate = useNavigate();
+
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const { ...form } = useForm<z.infer<typeof registerTeamSchema>>({
+  const createOrganizationForm = useForm<z.infer<typeof registerTeamSchema>>({
     resolver: zodResolver(registerTeamSchema),
     defaultValues: {
       teamName: "",
@@ -33,9 +43,8 @@ export default function Page() {
       logo: null,
     },
   });
-  console.log(!form.formState.isValid);
 
-  function onSubmit(values: z.infer<typeof registerTeamSchema>) {
+  function onSubmitNewOrganization(values: z.infer<typeof registerTeamSchema>) {
     const formData = new FormData();
     formData.append("teamName", values.teamName);
     formData.append("companySize", values.companySize);
@@ -45,20 +54,51 @@ export default function Page() {
       formData.append("logo", values.teamName.charAt(0).toUpperCase());
     }
 
+    try {
+      // redirect to page
+
+      navigate("/team-invite");
+    } catch (error) {
+    } finally {
+    }
+
     console.log([...formData]);
+  }
+
+  const joinOrganizationForm = useForm<z.infer<typeof joinOrganizationSchema>>({
+    resolver: zodResolver(joinOrganizationSchema),
+    defaultValues: {
+      teamID: "",
+    },
+  });
+
+  function onSubmitJoinOrganization(
+    values: z.infer<typeof joinOrganizationSchema>
+  ) {
+    try {
+      // redirect to page
+    } catch (error) {
+    } finally {
+    }
+
+    console.log(values);
   }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
       <div className="max-w-[500px] flex-1 p-8 bg-gray-900 text-white">
         <h1 className="text-3xl font-bold mb-6">Tell us about your team</h1>
-        <p className="text-sm text-gray-400 mb-1">Step 1 of 4</p>
-        <div className="w-16 h-1 bg-purple-600 mb-6"></div>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <p className="text-sm text-gray-400 mb-1">Step 1 of 2</p>
+        <div className="w-16 rounded-lg h-1 bg-purple-600 mb-6"></div>
+        <Form {...createOrganizationForm}>
+          <form
+            onSubmit={createOrganizationForm.handleSubmit(
+              onSubmitNewOrganization
+            )}
+            className="space-y-6"
+          >
             <FormField
-              control={form.control}
+              control={createOrganizationForm.control}
               name="teamName"
               render={({ field }) => (
                 <FormItem>
@@ -82,7 +122,7 @@ export default function Page() {
             />
 
             <FormField
-              control={form.control}
+              control={createOrganizationForm.control}
               name="companySize"
               render={({ field }) => (
                 <FormItem>
@@ -108,7 +148,7 @@ export default function Page() {
             />
 
             <FormField
-              control={form.control}
+              control={createOrganizationForm.control}
               name="logo"
               render={({ field }) => (
                 <FormItem>
@@ -124,7 +164,10 @@ export default function Page() {
                         />
                       ) : (
                         <div className="w-12 h-12 bg-purple-200 text-purple-800 flex items-center justify-center text-2xl font-bold rounded">
-                          {form.getValues("teamName").charAt(0).toUpperCase()}
+                          {createOrganizationForm
+                            .getValues("teamName")
+                            .charAt(0)
+                            .toUpperCase()}
                         </div>
                       )}
 
@@ -152,14 +195,67 @@ export default function Page() {
 
             <Button
               className="w-full"
-              disabled={!form.formState.isValid}
+              disabled={!createOrganizationForm.formState.isValid}
               type="submit"
             >
-              {!form.formState.isValid}
               Submit
             </Button>
           </form>
         </Form>
+
+        <div>
+          <div className="flex flex-row gap-3 items-center text-center justify-center">
+            <div className="flex-1 h-[0.5px] bg-gray-400"></div>
+            <h2 className="text-xl font-bold my-3">or</h2>
+            <div className="flex-1 h-[0.5px] bg-gray-400"></div>
+          </div>
+
+          <h1 className="text-3xl font-bold text-center mb-6">
+            Join organization
+          </h1>
+
+          <Form {...joinOrganizationForm}>
+            <form
+              onSubmit={joinOrganizationForm.handleSubmit(
+                onSubmitJoinOrganization
+              )}
+              className="space-y-6"
+            >
+              <FormField
+                control={joinOrganizationForm.control}
+                name="teamID"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel htmlFor="teamID">Company or Team Id</FormLabel>
+
+                    <FormControl>
+                      <Input
+                        className="bg-gray-800 border-gray-700 text-white"
+                        placeholder="Example: XyZ12Gg"
+                        id="teamID"
+                        {...field}
+                      />
+                    </FormControl>
+
+                    <FormDescription>
+                      Organization administrator should provide you team ID to
+                      join
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                className="w-full"
+                disabled={!joinOrganizationForm.formState.isValid}
+                type="submit"
+              >
+                Submit
+              </Button>
+            </form>
+          </Form>
+        </div>
       </div>
 
       <div className="flex-1 p-8 flex items-center justify-center">
