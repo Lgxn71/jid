@@ -1,5 +1,13 @@
+import type { LoaderFunctionArgs } from "@remix-run/node";
+import { isOnboarded } from "~/auth.server";
 import { AppSidebar } from "~/components/app-sidebar";
 import { SidebarLayout, SidebarTrigger } from "~/components/ui/sidebar";
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+	await isOnboarded(request);
+
+	return "nice";
+};
 
 export default function Page() {
 	return (

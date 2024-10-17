@@ -1,3 +1,4 @@
+import { redirect } from "@remix-run/react";
 import {
 	Atom,
 	Bird,
@@ -17,6 +18,7 @@ import {
 	Star,
 	Turtle,
 } from "lucide-react";
+import { useContext } from "react";
 
 import { NavMain } from "~/components/nav-main";
 import { NavProjects } from "~/components/nav-projects";
@@ -32,6 +34,8 @@ import {
 	SidebarItem,
 	SidebarLabel,
 } from "~/components/ui/sidebar";
+import { UserContext } from "~/context/userContext";
+
 const data = {
 	teams: [
 		{
@@ -246,6 +250,8 @@ const data = {
 };
 
 export function AppSidebar() {
+	const user = useContext(UserContext);
+
 	return (
 		<Sidebar>
 			<SidebarHeader>
@@ -268,9 +274,7 @@ export function AppSidebar() {
 					<StorageCard />
 				</SidebarItem>
 			</SidebarContent>
-			<SidebarFooter>
-				<NavUser user={data.user} />
-			</SidebarFooter>
+			<SidebarFooter>{user && <NavUser user={user} />}</SidebarFooter>
 		</Sidebar>
 	);
 }

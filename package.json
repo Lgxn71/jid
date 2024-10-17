@@ -11,10 +11,12 @@
     "typecheck": "tsc",
     "format": "biome format --write .",
     "check": "biome check",
-    "check:write": "biome check --write ."
+    "check:write": "biome check --write .",
+    "db:setup": "prisma generate && prisma migrate deploy"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
+    "@prisma/client": "^5.21.0",
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-collapsible": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.2",
@@ -23,13 +25,16 @@
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-popover": "^1.1.2",
     "@radix-ui/react-progress": "^1.1.0",
-    "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-radio-group": "^1.2.1",
     "@radix-ui/react-separator": "^1.1.0",
     "@radix-ui/react-slot": "^1.1.0",
-    "@radix-ui/react-toast": "^1.2.2",
     "@remix-run/node": "^2.12.1",
     "@remix-run/react": "^2.12.1",
     "@remix-run/serve": "^2.12.1",
+    "@rvf/remix": "^6.2.0",
+    "@rvf/zod": "^6.0.3",
+    "@supabase/ssr": "^0.5.1",
+    "@supabase/supabase-js": "^2.45.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "isbot": "^4.1.0",
@@ -37,8 +42,11 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.53.0",
+    "remix-auth": "^3.7.0",
+    "remix-auth-github": "^2.0.0",
     "remix-themes": "^1.5.1",
-    "tailwind-merge": "^2.5.4",
+    "superjson": "^2.2.1",
+    "tailwind-merge": "^2.5.3",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.0.0",
     "zod": "^3.23.8"
@@ -50,6 +58,7 @@
     "@types/react-dom": "^18.2.7",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
+    "prisma": "^5.21.0",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.1.6",
     "vite": "^5.1.0",
@@ -57,5 +66,6 @@
   },
   "engines": {
     "node": ">=20.0.0"
-  }
+  },
+  "trustedDependencies": ["@biomejs/biome"]
 }
