@@ -68,6 +68,7 @@ function Layout() {
         <Links />
       </head>
       <body>
+        <div id="modal-background"></div>
         <Toaster />
 
         <UserContext.Provider value={user}>
