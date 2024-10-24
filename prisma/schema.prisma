@@ -8,14 +8,121 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  email        String   @unique
-  authProvider String
-  providerId   String?
-  firstName    String
-  lastName     String?
-  isOnboarded  Boolean  @default(false)
-  imageUrl     String?
+  id                 String            @id @default(uuid())
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  email              String            @unique
+  authProvider       String
+  providerId         String?
+  profession         String?
+  firstName          String
+  lastName           String?
+  isOnboarded        Boolean           @default(false)
+  imageUrl           String?
+  organizations      Organization[]    @relation("UserOrganizations")
+  ownedOrganizations Organization[]    @relation("OrganizationOwner")
+  projects           Project[]         @relation("ProjectMembers")
+  assignedTasks      Task[]            @relation("UserTasks")
+  sentMessages       Message[]         @relation("SentMessages")
+  receivedMessages   Message[]         @relation("ReceivedMessages")
+  notifications      Notification[]
+  chats              Chat[]            @relation("UserChats")
+  lastReadMessages   LastReadMessage[]
+  createdInvitations InvitationLink[]  @relation("InvitationCreator")
+}
+
+model Organization {
+  id          String           @id @default(uuid())
+  name        String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  owner       User             @relation("OrganizationOwner", fields: [ownerId], references: [id])
+  ownerId     String
+  members     User[]           @relation("UserOrganizations")
+  projects    Project[]
+  invitations InvitationLink[]
+}
+
+model Project {
+  id             String       @id @default(uuid())
+  name           String
+  description    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  tasks          Task[]
+  members        User[]       @relation("ProjectMembers")
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  status      String    @default("ToDo")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  project     Project   @relation(fields: [projectId], references: [id])
+  projectId   String
+  assignees   User[]    @relation("UserTasks")
+  dueDate     DateTime?
+  priority    String    @default("Medium")
+}
+
+model Chat {
+  id               String            @id @default(uuid())
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  users            User[]            @relation("UserChats")
+  messages         Message[]
+  lastReadMessages LastReadMessage[]
+}
+
+model Message {
+  id               String            @id @default(uuid())
+  content          String
+  createdAt        DateTime          @default(now())
+  sender           User              @relation("SentMessages", fields: [senderId], references: [id])
+  senderId         String
+  receiver         User?             @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  receiverId       String?
+  chat             Chat              @relation(fields: [chatId], references: [id])
+  chatId           String
+  lastReadMessages LastReadMessage[]
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  isRead    Boolean  @default(false)
+}
+
+model LastReadMessage {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  chatId    String
+  message   Message  @relation(fields: [messageId], references: [id])
+  messageId String
+  readAt    DateTime @default(now())
+
+  @@unique([userId, chatId])
+}
+
+model InvitationLink {
+  id             String       @id @default(uuid())
+  createdAt      DateTime     @default(now())
+  expiresAt      DateTime
+  token          String       @unique
+  isUsed         Boolean      @default(false)
+  creator        User         @relation("InvitationCreator", fields: [creatorId], references: [id])
+  creatorId      String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  role           String // The role of the invited user in the organization
+  email          String? // Optional: email of the invited user if known
 }

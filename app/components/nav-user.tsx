@@ -39,7 +39,9 @@ export function NavUser({
 						</AvatarFallback>
 					</Avatar>
 					<div className="grid flex-1 leading-none">
-						<div className="font-medium">{user.firstName}</div>
+						<div className="font-medium overflow-hidden min-w-0 whitespace-nowrap text-ellipsis">
+							{user.firstName} {user.lastName}
+						</div>
 						<div className="overflow-hidden text-xs text-muted-foreground">
 							<div className="line-clamp-1">{user.email}</div>
 						</div>
@@ -62,7 +64,7 @@ export function NavUser({
 							</AvatarFallback>
 						</Avatar>
 						<div className="grid flex-1">
-							<div className="font-medium">{user.firstName}</div>
+							<div className="font-medium">{user.firstName} {user.lastName}</div>
 							<div className="overflow-hidden text-xs text-muted-foreground">
 								<div className="line-clamp-1">{user.email}</div>
 							</div>
