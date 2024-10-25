@@ -48,11 +48,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 	const formDataObj = Object.fromEntries(formData) as z.infer<
 		typeof onboardingSchema
 	>;
-	console.log(formDataObj);
 
 	const data = onboardingSchema.parse(formDataObj);
-
-	console.log(data);
 
 	const updatedUser = await prisma.user.update({
 		where: {

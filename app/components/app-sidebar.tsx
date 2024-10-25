@@ -198,23 +198,6 @@ const data = {
 			icon: Send,
 		},
 	],
-	projects: [
-		{
-			name: "Design Engineering",
-			url: "#",
-			icon: Frame,
-		},
-		{
-			name: "Sales & Marketing",
-			url: "#",
-			icon: PieChart,
-		},
-		{
-			name: "Travel",
-			url: "#",
-			icon: MapIcon,
-		},
-	],
 	searchResults: [
 		{
 			title: "Routing Fundamentals",
@@ -255,23 +238,16 @@ export function AppSidebar() {
 	return (
 		<Sidebar>
 			<SidebarHeader>
-				<TeamSwitcher teams={data.teams} />
+				<TeamSwitcher />
 			</SidebarHeader>
 			<SidebarContent>
 				<SidebarItem>
-					<SidebarLabel>Platform</SidebarLabel>
-					<NavMain items={data.navMain} searchResults={data.searchResults} />
-				</SidebarItem>
-				<SidebarItem>
 					<SidebarLabel>Projects</SidebarLabel>
-					<NavProjects projects={data.projects} />
+					<NavProjects />
 				</SidebarItem>
 				<SidebarItem className="mt-auto">
 					<SidebarLabel>Help</SidebarLabel>
 					<NavSecondary items={data.navSecondary} />
-				</SidebarItem>
-				<SidebarItem>
-					<StorageCard />
 				</SidebarItem>
 			</SidebarContent>
 			<SidebarFooter>{user && <NavUser user={user} />}</SidebarFooter>

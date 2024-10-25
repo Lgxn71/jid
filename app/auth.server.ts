@@ -47,12 +47,37 @@ export const isLoggedIn = async (request: Request) => {
 	}
 };
 
-
-export const isOnboarded = async (request: Request) => {
+export const isOnboarded = async (
+	request: Request,
+	options?: { hasOrg?: boolean },
+) => {
 	await isLoggedIn(request);
 	const user = await authenticator.isAuthenticated(request);
 
 	if (!user?.isOnboarded) {
 		throw redirect("/onboarding");
+	}
+
+	if (options?.hasOrg) {
+		const org = await prisma.organization.findFirst({
+			where: {
+				OR: [
+					{
+						members: {
+							some: {
+								id: user.id,
+							},
+						},
+					},
+					{
+						ownerId: user.id,
+					},
+				],
+			},
+		});
+
+		if (!org) {
+			throw redirect("/organization");
+		}
 	}
 };
