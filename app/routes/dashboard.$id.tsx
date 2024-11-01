@@ -1,5 +1,5 @@
 import type { Organization, Project } from "@prisma/client";
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Outlet, redirect, useLoaderData } from "@remix-run/react";
 import { parse, stringify } from "superjson";
 import { authenticator, isLoggedIn } from "~/auth.server";
@@ -49,6 +49,41 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 			orgs,
 			proj,
 		});
+	}
+};
+
+export const action = async ({ request, params }: ActionFunctionArgs) => {
+	await isLoggedIn(request);
+	const formData = await request.formData();
+	console.log(formData);
+
+	console.log("called");
+	const user = await authenticator.isAuthenticated(request);
+
+	const formDataObj = Object.fromEntries(formData);
+
+	console.log(formDataObj);
+
+	if (formDataObj.intent === "CREATE_PROJECT" && formDataObj.name && user) {
+		const newOrg = await prisma.project.create({
+			data: {
+				organization: {
+					connect: {
+						id: params.id,
+					},
+				},
+				members: {
+					connect: {
+						id: user.id,
+					},
+				},
+				name: formDataObj.name.toString(),
+			},
+		});
+
+		console.log(newOrg);
+
+		return redirect(`/dashboard/${newOrg.id}`);
 	}
 };
 

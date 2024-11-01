@@ -71,6 +71,48 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 		return redirect(`/dashboard/${newOrg.id}`);
 	}
+
+	if (formDataObj.intent === "JOIN" && formDataObj.teamID && user) {
+		const updatedOrg = await prisma.organization.update({
+			where: {
+				id: formDataObj.teamID.toString(),
+			},
+			data: {
+				members: {
+					connect: {
+						id: user.id,
+					},
+				},
+			},
+		});
+
+		const defaultProject = await prisma.project.findFirst({
+			where: {
+				organization: {
+					id: updatedOrg.id,
+				},
+			},
+		});
+
+		if (!defaultProject) return null;
+
+		await prisma.project.update({
+			where: {
+				id: defaultProject.id,
+			},
+			data: {
+				members: {
+					connect: {
+						id: user.id,
+					},
+				},
+			},
+		});
+
+		console.log(updatedOrg);
+
+		return redirect(`/dashboard/${updatedOrg.id}`);
+	}
 };
 
 const registerTeamSchema = z.object({
@@ -126,7 +168,15 @@ export default function Page() {
 		values: z.infer<typeof joinOrganizationSchema>,
 	) {
 		try {
-			// redirect to page
+			const formData = new FormData();
+			formData.append("teamID", values.teamID);
+			formData.append("intent", "JOIN");
+
+			fetcher.submit(formData, {
+				method: "POST",
+			});
+
+			console.log([...formData]);
 		} catch (error) {
 		} finally {
 		}

@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "@remix-run/react";
+import { Link, useLocation, useNavigate, useParams } from "@remix-run/react";
 import { ChevronsUpDown, Plus } from "lucide-react";
 import * as React from "react";
 
@@ -17,7 +17,10 @@ export function TeamSwitcher() {
 	const orgData = React.useContext(OrgContext);
 	const navigate = useNavigate();
 	const location = useLocation();
-	const [activeTeam, setActiveTeam] = React.useState(orgData[0]);
+	const params = useParams();
+	const [activeTeam, setActiveTeam] = React.useState(
+		orgData.find((team) => team.id === params.id),
+	);
 
 	return (
 		<DropdownMenu>
@@ -49,18 +52,13 @@ export function TeamSwitcher() {
 					<DropdownMenuItem
 						key={team.name}
 						onClick={() => {
-							console.log(
-								location.pathname.replace(
-									/\/dashboard\/[^/]+/,
-									`/dashboard/${team.id}`,
-								),
-							);
 							navigate(
 								location.pathname.replace(
 									/\/dashboard\/[^/]+/,
 									`/dashboard/${team.id}`,
 								),
 							);
+							setActiveTeam(orgData.find((item) => item.id === team.id));
 						}}
 						className="items-start gap-2 px-1.5"
 					>

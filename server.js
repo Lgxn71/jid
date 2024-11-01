@@ -18,8 +18,8 @@ const viteDevServer =
 const remixHandler = createRequestHandler({
 	build: viteDevServer
 		? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
-    // @ts-expect-error
-		: await import("./build/server/index.js"),
+		: // @ts-expect-error
+			await import("./build/server/index.js"),
 });
 
 const app = express();
@@ -38,9 +38,9 @@ io.on("connection", (socket) => {
 
 	socket.emit("confirmation", "connected!");
 
-	socket.on("event", (data) => {
+	socket.on("chat", (data) => {
 		console.log(socket.id, data);
-		socket.emit("event", "pong");
+		socket.broadcast.emit("chat", data);
 	});
 });
 
