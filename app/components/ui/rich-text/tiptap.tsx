@@ -1,64 +1,85 @@
 import { useEditor, EditorContent } from "@tiptap/react";
-import { Heading } from "@tiptap/extension-heading";
-import { OrderedList } from "@tiptap/extension-ordered-list";
-import { BulletList } from "@tiptap/extension-bullet-list";
-
 import StarterKit from "@tiptap/starter-kit";
-import ToolBar from "./toolbar";
+import Placeholder from "@tiptap/extension-placeholder";
+import CharacterCount from "@tiptap/extension-character-count";
 import { useEffect } from "react";
+import ToolBar from "./toolbar";
+import { SendHorizonal } from "lucide-react";
 
 function TipTap({
-	description,
-	onChange,
+  description,
+  onChange,
+  onSubmit,
+  maxLength = 500,
 }: {
-	description: string;
-	onChange: (richText: string) => void;
+  description: string;
+  onChange: (richText: string) => void;
+  onSubmit: () => void;
+  maxLength?: number;
 }) {
-	const editor = useEditor({
-		extensions: [
-			StarterKit.configure(),
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        paragraph: {
+          HTMLAttributes: { class: "mb-1" },
+        },
+        blockquote: false,
+        codeBlock: false,
+      }),
+      Placeholder.configure({
+        placeholder: "Type your message...",
+        emptyEditorClass:
+          "text-gray-400 italic focus:outline-none focus:ring-0",
+      }),
+      CharacterCount.configure({ limit: maxLength }), // Set character limit
+    ],
+    content: description || "<p></p>",
+    editorProps: {
+      attributes: {
+        class:
+          "text-white w-full min-h-[50px] bg-[#262626] px-3 py-2 text-sm focus:outline-none  placeholder-gray-400",
+      },
+      handleKeyDown(view, event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          onSubmit();
+          return true;
+        }
+        return false;
+      },
+    },
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
+    },
+  });
 
-			BulletList.configure({
-				HTMLAttributes: {
-					class: "list-disc",
-				},
-			}),
-			OrderedList.configure({
-				HTMLAttributes: {
-					class: "list-decimal",
-				},
-			}),
-			Heading.configure({
-				HTMLAttributes: {
-					class: "text-xl font-bold",
-					level: [2],
-				},
-			}),
-		],
-		content: description,
-		editorProps: {
-			attributes: {
-				class:
-					"flex text-black min-h-[150px] w-full mt-2 rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ",
-			},
-		},
+  useEffect(() => {
+    if (editor && editor.getHTML() !== description) {
+      editor.commands.setContent(description || "<p></p>");
+    }
+  }, [description, editor]);
 
-		onUpdate: ({ editor }) => {
-			onChange(editor.getHTML());
-			console.log(editor.getHTML());
-		},
-	});
+  return (
+    <div className="group focus-within:border-[#525151] bg-[#262626] w-full rounded-md border border-[#343434]">
+      <ToolBar editor={editor} />
 
-	useEffect(() => {
-		editor?.commands.setContent(description);
-	}, [description, editor]);
+      <EditorContent editor={editor} />
 
-	return (
-		<div className="flex flex-col justify-stretch min-h-[250px]">
-			<ToolBar editor={editor} />
-			<EditorContent placeholder="Type your message..." className="w-full" editor={editor} />
-		</div>
-	);
+      {editor && (
+        <div className="flex flex-row justify-between py-2 px-2">
+          <div className=" text-xs group-focus-within:text-[#a4a4a4] text-[#4e4d4d] mt-1">
+            {editor.storage.characterCount.characters()}/{maxLength}
+          </div>
+
+
+          <SendHorizonal
+            className=" group-focus-within:text-[#a4a4a4] text-[#4e4d4d] w-4 h-4x"
+            onClick={onSubmit}
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default TipTap;

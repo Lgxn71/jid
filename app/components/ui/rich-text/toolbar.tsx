@@ -3,10 +3,17 @@ import {
   Bold,
   Italic,
   Strikethrough,
-  Heading2,
   List,
   ListOrdered,
+  CommandIcon,
 } from "lucide-react";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 import { Toggle } from "~/components/ui/toggle";
 type Props = {
   editor: Editor | null;
@@ -16,23 +23,27 @@ export default function ToolBar({ editor }: Props) {
     return null;
   }
   return (
-    <div className="border border-input bg-transparent rounded">
-      <Toggle
-        pressed={editor.isActive("heading")}
-        onPressedChange={() =>
-          editor.chain().focus().toggleHeading({ level: 2 }).run()
-        }
-        size="sm"
-      >
-        <Heading2 className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        pressed={editor.isActive("bold")}
-        onPressedChange={() => editor.chain().focus().toggleBold().run()}
-        size="sm"
-      >
-        <Bold className="h-4 w-4" />
-      </Toggle>
+    <div className="border-b group-focus-within:text-[#a4a4a4] text-[#4e4d4d] group-focus-within:border-[#525151] border-[#343434] bg-transparent ">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Toggle
+              pressed={editor.isActive("bold")}
+              onPressedChange={() => editor.chain().focus().toggleBold().run()}
+              size="sm"
+            >
+              <Bold className="h-4 w-4" />
+            </Toggle>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Bold</p>
+            <br />
+            <div className="flex flex-row">
+              <CommandIcon className="w-4 h-4" /> + B
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <Toggle
         pressed={editor.isActive("italic")}
         onPressedChange={() => editor.chain().focus().toggleItalic().run()}
