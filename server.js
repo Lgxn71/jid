@@ -30,6 +30,11 @@ const httpServer = createServer(app);
 // And then attach the socket.io server to the HTTP server
 const io = new Server(httpServer);
 
+io.use((socket, next) => {
+	console.log(socket.request.headers)
+	next();
+})
+
 // Then you can use `io` to listen the `connection` event and get a socket
 // from a client
 io.on("connection", (socket) => {
