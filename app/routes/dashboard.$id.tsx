@@ -105,7 +105,7 @@ export default function Page() {
               <div className='size-12 flex items-center w-full border-b p-2'>
                 <SidebarTrigger />
               </div>
-              <div className="pb-32 h-[calc(100%_-_4rem)] w-full p-2">
+              <div className="pb-[7.1rem] h-[calc(100%_-_4rem)] w-full p-2">
                 <Outlet />
               </div>
             </div>

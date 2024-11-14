@@ -1,33 +1,27 @@
-import { Link, useLocation, useParams } from '@remix-run/react';
-import {
-  Frame,
-  type LucideIcon,
-  MoreHorizontal,
-  PlusSquare
-} from 'lucide-react';
-import { useContext, useState } from 'react';
+import { Link, useLocation, useParams } from "@remix-run/react";
+import { Frame, MoreHorizontal, PlusSquare } from "lucide-react";
+import { useContext, useState } from "react";
 
-import { Button } from '~/components/ui/button';
+import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '~/components/ui/dropdown-menu';
-import { ProjContext } from '~/context/projContext';
-import { cn } from '~/lib/utils';
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import { ProjContext } from "~/context/projContext";
+import { cn } from "~/lib/utils";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
-  DialogTitle
-} from '~/components/ui/dialog';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
+  DialogTitle,
+} from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 
-export function NavProjects({ className }: React.ComponentProps<'ul'>) {
+export function NavProjects({ className }: React.ComponentProps<"ul">) {
   const projects = useContext(ProjContext);
   const params = useParams();
   const [open, setOpen] = useState(false);
@@ -35,14 +29,14 @@ export function NavProjects({ className }: React.ComponentProps<'ul'>) {
 
   return (
     <>
-      <ul className={cn('grid gap-0.5', className)}>
-        {projects.map(item => (
+      <ul className={cn("grid gap-0.5", className)}>
+        {projects.map((item) => (
           <li
             key={item.name}
             className={cn(
-              'has-[[data-state=open]]:bg-accent has-[[data-state=open]]:text-accent-foreground group relative rounded-md hover:bg-accent hover:text-accent-foreground',
+              "has-[[data-state=open]]:bg-accent has-[[data-state=open]]:text-accent-foreground group relative rounded-md hover:bg-accent hover:text-accent-foreground",
               {
-                'bg-secondary': location.pathname.includes(`chat/${item.id}`)
+                "bg-secondary": location.pathname.includes(`chat/${item.id}`),
               }
             )}
           >
@@ -74,6 +68,11 @@ export function NavProjects({ className }: React.ComponentProps<'ul'>) {
             </DropdownMenu>
           </li>
         ))}
+        <Link  to={"kanban/"} className="flex flex-row h-7 items-center gap-2.5 overflow-hidden rounded-md px-1.5 text-xs outline-none ring-ring transition-all hover:bg-accent hover:text-accent-foreground focus-visible:ring-2">
+          <PlusSquare className="h-4 w-4 shrink-0 translate-x-0.5 text-muted-foreground" />
+          <p>Kanban</p>
+        </Link>
+
         <li>
           <button
             type="button"
@@ -90,7 +89,7 @@ export function NavProjects({ className }: React.ComponentProps<'ul'>) {
           </button>
         </li>
       </ul>
-      <Dialog open={open} onOpenChange={val => setOpen(val)}>
+      <Dialog open={open} onOpenChange={(val) => setOpen(val)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Add a new project</DialogTitle>
