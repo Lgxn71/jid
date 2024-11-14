@@ -1,14 +1,16 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Button } from "~/components/ui/button";
-import { useSocket } from "~/context/socketContext";
-import { Form, FormControl, FormField, FormItem } from "~/components/ui/form";
 
+import { UserContext } from "~/context/userContext";
+import { useSocket } from "~/context/socketContext";
+
+import { Form, FormControl, FormField, FormItem } from "~/components/ui/form";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import TipTap from "~/components/ui/rich-text/tiptap";
-import { UserContext } from "~/context/userContext";
+
 import { cn } from "~/lib/utils";
+
+import TipTap from "~/components/ui/rich-text/tiptap";
 
 export default function ChatPage() {
   const socket = useSocket();
@@ -80,7 +82,7 @@ export default function ChatPage() {
         {messages.map((message) => (
           <div
             key={message.createdAt}
-            className={cn("p-2 bg-gray-100 rounded w-[70%]", {
+            className={cn("p-2 bg-gray-100 text-gray-800 rounded w-[70%]", {
               "ml-auto": message.userId === user?.id,
             })}
           >

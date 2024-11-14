@@ -35,43 +35,105 @@ export default function ToolBar({ editor }: Props) {
               <Bold className="h-4 w-4" />
             </Toggle>
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent className=" text-[16px] flex flex-col">
             <p>Bold</p>
-            <br />
-            <div className="flex flex-row">
+            <div className="flex items-center flex-row">
               <CommandIcon className="w-4 h-4" /> + B
             </div>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <Toggle
-        pressed={editor.isActive("italic")}
-        onPressedChange={() => editor.chain().focus().toggleItalic().run()}
-        size="sm"
-      >
-        <Italic className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        pressed={editor.isActive("strike")}
-        onPressedChange={() => editor.chain().focus().toggleStrike().run()}
-        size="sm"
-      >
-        <Strikethrough className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        pressed={editor.isActive("bulletList")}
-        onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
-        size="sm"
-      >
-        <List className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        pressed={editor.isActive("orderedList")}
-        onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
-        size="sm"
-      >
-        <ListOrdered className="h-4 w-4" />
-      </Toggle>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Toggle
+              pressed={editor.isActive("italic")}
+              onPressedChange={() =>
+                editor.chain().focus().toggleItalic().run()
+              }
+              size="sm"
+            >
+              <Italic className="h-4 w-4" />
+            </Toggle>
+          </TooltipTrigger>
+          <TooltipContent className=" text-[16px] flex flex-col">
+            <p>Italic</p>
+            <div className="flex items-center flex-row">
+              <CommandIcon className="w-4 h-4" /> + I
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Toggle
+              pressed={editor.isActive("strike")}
+              onPressedChange={() =>
+                editor.chain().focus().toggleStrike().run()
+              }
+              size="sm"
+            >
+              <Strikethrough className="h-4 w-4" />
+            </Toggle>
+          </TooltipTrigger>
+          <TooltipContent className=" text-[16px] flex flex-col">
+            <p>Strikethrough</p>
+            <div className="flex items-center flex-row">
+              <CommandIcon className="w-4 h-4" /> + S
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Toggle
+              pressed={editor.isActive("orderedList")}
+              onPressedChange={() =>
+                editor.chain().focus().toggleOrderedList().run()
+              }
+              size="sm"
+            >
+              <ListOrdered className="h-4 w-4" />
+            </Toggle>
+          </TooltipTrigger>
+          <TooltipContent className=" text-[16px] flex flex-col">
+            <p>Order List</p>
+            <div className="flex items-center flex-row">
+              <CommandIcon className="w-4 h-4" /> + Shift + 7
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Toggle
+              pressed={editor.isActive("bulletList")}
+              onPressedChange={() =>
+                editor.chain().focus().toggleBulletList().run()
+              }
+              size="sm"
+            >
+              <List className="h-4 w-4" />
+
+              {/* why ?  submits message */}
+              {/* PROBABLY BUTTON M */}
+            </Toggle>
+          </TooltipTrigger>
+          <TooltipContent className=" text-[16px] flex flex-col">
+            <p>Bullet List</p>
+            <div className="flex items-center flex-row">
+              <CommandIcon className="w-4 h-4" /> + Shift + 8
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }

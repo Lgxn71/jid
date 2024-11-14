@@ -1,10 +1,19 @@
+import { useEffect } from "react";
+
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
-import { useEffect } from "react";
 import ToolBar from "./toolbar";
+
 import { SendHorizonal } from "lucide-react";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 function TipTap({
   description,
@@ -41,6 +50,7 @@ function TipTap({
       },
       handleKeyDown(view, event) {
         if (event.key === "Enter" && !event.shiftKey) {
+          // prob rearrange them
           event.preventDefault();
           onSubmit();
           return true;
@@ -71,11 +81,20 @@ function TipTap({
             {editor.storage.characterCount.characters()}/{maxLength}
           </div>
 
-
-          <SendHorizonal
-            className=" group-focus-within:text-[#a4a4a4] text-[#4e4d4d] w-4 h-4x"
-            onClick={onSubmit}
-          />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <SendHorizonal
+                  className=" group-focus-within:text-[#a4a4a4] text-[#4e4d4d] w-4 h-4"
+                  onClick={onSubmit}
+                />
+              </TooltipTrigger>
+              <TooltipContent className=" text-[16px] flex flex-col">
+                <p>Send Message</p>
+                <div className="flex items-center flex-row">Enter</div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       )}
     </div>
