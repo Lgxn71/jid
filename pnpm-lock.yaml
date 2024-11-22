@@ -17,6 +17,12 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@18.3.1)
+      '@electric-sql/client':
+        specifier: ^0.8.0
+        version: 0.8.0
+      '@electric-sql/react':
+        specifier: ^0.5.4
+        version: 0.5.4(react@18.3.1)
       '@hookform/resolvers':
         specifier: ^3.9.0
         version: 3.9.0(react-hook-form@7.53.1(react@18.3.1))
@@ -56,6 +62,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.1.0
         version: 1.1.0(@types/react@18.3.11)(react@18.3.1)
+      '@radix-ui/react-tabs':
+        specifier: ^1.1.1
+        version: 1.1.1(@types/react-dom@18.3.1)(@types/react@18.3.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-toast':
         specifier: ^1.2.2
         version: 1.2.2(@types/react-dom@18.3.1)(@types/react@18.3.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -89,6 +98,15 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.45.4
         version: 2.45.4
+      '@tanstack/query-sync-storage-persister':
+        specifier: ^5.60.6
+        version: 5.60.6
+      '@tanstack/react-query':
+        specifier: ^5.61.0
+        version: 5.61.0(react@18.3.1)
+      '@tanstack/react-query-persist-client':
+        specifier: ^5.61.0
+        version: 5.61.0(@tanstack/react-query@5.61.0(react@18.3.1))(react@18.3.1)
       '@tiptap/extension-bullet-list':
         specifier: ^2.9.1
         version: 2.9.1(@tiptap/core@2.9.1(@tiptap/pm@2.9.1))
@@ -131,6 +149,9 @@ importers:
       compression:
         specifier: ^1.7.4
         version: 1.7.4
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
       express:
         specifier: ^4.21.1
         version: 4.21.1
@@ -459,6 +480,17 @@ packages:
     resolution: {integrity: sha512-+MKAJEOfaBe5SmV6t34p80MMKhjvUz0vRrvVJbPT0WElzaOJ/1xs+D+KDv+tD/NE5ujfrChEcshd4fLn0wpiqg==}
     peerDependencies:
       react: '>=16.8.0'
+
+  '@electric-sql/client@0.8.0':
+    resolution: {integrity: sha512-M4VnuL2q2i1yhsjc9DEQtf4GEkXoaMjlfm0Lq7KqLDjj2nqPhbUTo8IeWhf3OJSZ7j+GyFd/YlLg4rlBDrE/6Q==}
+
+  '@electric-sql/react@0.5.4':
+    resolution: {integrity: sha512-SjyqpcGFv62s3Wwdz/SkIymDMCNF45ntwcxjVvOcoRStXCta+d0He0Lc/F3I6Ap1cyBzJ4OO7smkaKhwHD2Wlg==}
+    peerDependencies:
+      react: ^18.3.1
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   '@emotion/hash@0.9.2':
     resolution: {integrity: sha512-MyqliTZGuOm3+5ZRSaaBGP3USLw6+EGykkwZns2EPC5g8jJ4z9OrdZY9apkl3+UP9+sdz76YYkwCKP5gh8iY3g==}
@@ -1317,6 +1349,19 @@ packages:
       '@types/react':
         optional: true
 
+  '@radix-ui/react-tabs@1.1.1':
+    resolution: {integrity: sha512-3GBUDmP2DvzmtYLMsHmpA1GtR46ZDZ+OreXM/N+kkQJOPIgytFWWTfDQmBQKBvaFS0Vno0FktdbVzN28KGrMdw==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
   '@radix-ui/react-toast@1.2.2':
     resolution: {integrity: sha512-Z6pqSzmAP/bFJoqMAston4eSNa+ud44NSZTiZUmUen+IOZ5nBY8kzuU5WDBVyFXPtcW6yUalOHsxM/BP6Sv8ww==}
     peerDependencies:
@@ -1663,6 +1708,26 @@ packages:
 
   '@supabase/supabase-js@2.45.4':
     resolution: {integrity: sha512-E5p8/zOLaQ3a462MZnmnz03CrduA5ySH9hZyL03Y+QZLIOO4/Gs8Rdy4ZCKDHsN7x0xdanVEWWFN3pJFQr9/hg==}
+
+  '@tanstack/query-core@5.60.6':
+    resolution: {integrity: sha512-tI+k0KyCo1EBJ54vxK1kY24LWj673ujTydCZmzEZKAew4NqZzTaVQJEuaG1qKj2M03kUHN46rchLRd+TxVq/zQ==}
+
+  '@tanstack/query-persist-client-core@5.60.6':
+    resolution: {integrity: sha512-Rk5DiR9Mv5rQ7xXztodZlZxIXmjIhkkiB7hFlma+tWorsQO8DRuAzBH8xJTg0tLh8ydHGdiMMHHWAvJENNVGiw==}
+
+  '@tanstack/query-sync-storage-persister@5.60.6':
+    resolution: {integrity: sha512-gG63GG4ljU8HkjDynKsGPlFV/RTShByccUN7cHbhAQimYvGT/FGLYbENlYPHBb3zxukkWhViyaCZQlRFowxmXQ==}
+
+  '@tanstack/react-query-persist-client@5.61.0':
+    resolution: {integrity: sha512-KinWa6B6wDRbX6XrmDyHjWwAWePtAx1phtGl+6gWNHkbBncoSEEf0jZ9JIGXOcjxDmnwWPfmlqyeMRjmAtdHgg==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.61.0
+      react: ^18 || ^19
+
+  '@tanstack/react-query@5.61.0':
+    resolution: {integrity: sha512-SBzV27XAeCRBOQ8QcC94w2H1Md0+LI0gTWwc3qRJoaGuewKn5FNW4LSqwPFJZVEItfhMfGT7RpZuSFXjTi12pQ==}
+    peerDependencies:
+      react: ^18 || ^19
 
   '@tiptap/core@2.9.1':
     resolution: {integrity: sha512-tifnLL/ARzQ6/FGEJjVwj9UT3v+pENdWHdk9x6F3X0mB1y0SeCjV21wpFLYESzwNdBPAj8NMp8Behv7dBnhIfw==}
@@ -2266,6 +2331,9 @@ packages:
   data-urls@5.0.0:
     resolution: {integrity: sha512-ZYP5VBHshaDAiVZxjbRVcFJpc+4xGgT0bK3vzy1HLN8jTO975HEbuYzZJcHoQEY5K1a0z8YayJkyVETa08eNTg==}
     engines: {node: '>=18'}
+
+  date-fns@4.1.0:
+    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -4633,6 +4701,17 @@ snapshots:
       react: 18.3.1
       tslib: 2.8.0
 
+  '@electric-sql/client@0.8.0':
+    optionalDependencies:
+      '@rollup/rollup-darwin-arm64': 4.24.0
+
+  '@electric-sql/react@0.5.4(react@18.3.1)':
+    dependencies:
+      '@electric-sql/client': 0.8.0
+      use-sync-external-store: 1.2.2(react@18.3.1)
+    optionalDependencies:
+      react: 18.3.1
+
   '@emotion/hash@0.9.2': {}
 
   '@esbuild/aix-ppc64@0.21.5':
@@ -5322,6 +5401,22 @@ snapshots:
     optionalDependencies:
       '@types/react': 18.3.11
 
+  '@radix-ui/react-tabs@1.1.1(@types/react-dom@18.3.1)(@types/react@18.3.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@radix-ui/primitive': 1.1.0
+      '@radix-ui/react-context': 1.1.1(@types/react@18.3.11)(react@18.3.1)
+      '@radix-ui/react-direction': 1.1.0(@types/react@18.3.11)(react@18.3.1)
+      '@radix-ui/react-id': 1.1.0(@types/react@18.3.11)(react@18.3.1)
+      '@radix-ui/react-presence': 1.1.1(@types/react-dom@18.3.1)(@types/react@18.3.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-primitive': 2.0.0(@types/react-dom@18.3.1)(@types/react@18.3.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-roving-focus': 1.1.0(@types/react-dom@18.3.1)(@types/react@18.3.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@radix-ui/react-use-controllable-state': 1.1.0(@types/react@18.3.11)(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    optionalDependencies:
+      '@types/react': 18.3.11
+      '@types/react-dom': 18.3.1
+
   '@radix-ui/react-toast@1.2.2(@types/react-dom@18.3.1)(@types/react@18.3.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@radix-ui/primitive': 1.1.0
@@ -5724,6 +5819,28 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  '@tanstack/query-core@5.60.6': {}
+
+  '@tanstack/query-persist-client-core@5.60.6':
+    dependencies:
+      '@tanstack/query-core': 5.60.6
+
+  '@tanstack/query-sync-storage-persister@5.60.6':
+    dependencies:
+      '@tanstack/query-core': 5.60.6
+      '@tanstack/query-persist-client-core': 5.60.6
+
+  '@tanstack/react-query-persist-client@5.61.0(@tanstack/react-query@5.61.0(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@tanstack/query-persist-client-core': 5.60.6
+      '@tanstack/react-query': 5.61.0(react@18.3.1)
+      react: 18.3.1
+
+  '@tanstack/react-query@5.61.0(react@18.3.1)':
+    dependencies:
+      '@tanstack/query-core': 5.60.6
+      react: 18.3.1
 
   '@tiptap/core@2.9.1(@tiptap/pm@2.9.1)':
     dependencies:
@@ -6393,6 +6510,8 @@ snapshots:
     dependencies:
       whatwg-mimetype: 4.0.0
       whatwg-url: 14.0.0
+
+  date-fns@4.1.0: {}
 
   debug@2.6.9:
     dependencies:

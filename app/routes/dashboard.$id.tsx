@@ -55,14 +55,9 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   await isLoggedIn(request);
   const formData = await request.formData();
-  console.log(formData);
-
-  console.log('called');
   const user = await authenticator.isAuthenticated(request);
 
   const formDataObj = Object.fromEntries(formData);
-
-  console.log(formDataObj);
 
   if (formDataObj.intent === 'CREATE_PROJECT' && formDataObj.name && user) {
     const newOrg = await prisma.project.create({
@@ -83,7 +78,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
     console.log(newOrg);
 
-    return redirect(`/dashboard/${newOrg.id}`);
+    return redirect(`/dashboard/${params.id}/chat/${newOrg.id}`);
   }
 };
 
@@ -93,8 +88,6 @@ export default function Page() {
     proj: Project[];
   }>(useLoaderData<typeof loader>());
 
-  console.log(data);
-
   return (
     <OrgContext.Provider value={data.orgs}>
       <ProjContext.Provider value={data.proj}>
@@ -102,7 +95,7 @@ export default function Page() {
           <AppSidebar />
           <main className="flex h-full w-full flex-col p-4 transition-all duration-300 ease-in-out">
             <div className="flex flex-col h-full rounded-md border-2 border-dashed relative">
-              <div className='size-12 flex items-center w-full border-b p-2'>
+              <div className="size-12 flex items-center w-full border-b p-2">
                 <SidebarTrigger />
               </div>
               <div className="pb-[7.1rem] h-[calc(100%_-_4rem)] w-full p-2">

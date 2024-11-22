@@ -26,7 +26,7 @@ export default function ToolBar({ editor }: Props) {
     <div className="border-b group-focus-within:text-[#a4a4a4] text-[#4e4d4d] group-focus-within:border-[#525151] border-[#343434] bg-transparent ">
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Toggle
               pressed={editor.isActive("bold")}
               onPressedChange={() => editor.chain().focus().toggleBold().run()}
@@ -46,7 +46,7 @@ export default function ToolBar({ editor }: Props) {
 
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Toggle
               pressed={editor.isActive("italic")}
               onPressedChange={() =>
@@ -68,7 +68,7 @@ export default function ToolBar({ editor }: Props) {
 
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Toggle
               pressed={editor.isActive("strike")}
               onPressedChange={() =>
@@ -90,7 +90,7 @@ export default function ToolBar({ editor }: Props) {
 
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Toggle
               pressed={editor.isActive("orderedList")}
               onPressedChange={() =>
@@ -112,7 +112,7 @@ export default function ToolBar({ editor }: Props) {
 
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Toggle
               pressed={editor.isActive("bulletList")}
               onPressedChange={() =>
