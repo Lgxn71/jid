@@ -21,10 +21,15 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Project } from '@prisma/client';
 import { useQuery } from '@tanstack/react-query';
+import { parse } from 'superjson';
 
 export function NavProjects({ className }: React.ComponentProps<'ul'>) {
   const { data: projects } = useQuery({
-    queryKey: ['projects']
+    queryKey: ['projects'],
+    queryFn: () =>
+      fetch(`http://${window.location.host}/api/organization/${params.id}`)
+        .then(res => res.json())
+        .then(data => parse(data.projects))
   }) as { data: Project[] };
 
   const params = useParams();
@@ -100,8 +105,8 @@ export function NavProjects({ className }: React.ComponentProps<'ul'>) {
           </DialogHeader>
           <Form
             method="POST"
-            preventScrollReset={true}
-            action={`/dashboard/${params.id}`}
+            navigate={false}
+            action={`/api/organization/${params.id}/project`}
             className="grid gap-4 py-4"
             onSubmit={() => setOpen(false)}
           >

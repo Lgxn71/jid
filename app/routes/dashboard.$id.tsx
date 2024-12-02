@@ -1,5 +1,4 @@
-import type { Organization, Project } from '@prisma/client';
-import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
+import type { LoaderFunctionArgs } from '@remix-run/node';
 import {
   json,
   NavLink,
@@ -11,7 +10,6 @@ import {
 } from '@remix-run/react';
 import {
   dehydrate,
-  DehydratedState,
   HydrationBoundary,
   QueryClient
 } from '@tanstack/react-query';
@@ -21,95 +19,37 @@ import { AppSidebar } from '~/components/app-sidebar';
 import { CommandMenu } from '~/components/cmd-k';
 import { SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '~/components/ui/tabs';
-import { ProjContext } from '~/context/projContext';
 import { prisma } from '~/db.server';
+import { loader as orgLoader } from '~/routes/api.organization.$id';
 
-export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  await isLoggedIn(request);
-  const user = await authenticator.isAuthenticated(request);
+export const loader = async ({
+  request,
+  params,
+  context
+}: LoaderFunctionArgs) => {
+  const [orgs, projects] = await orgLoader({
+    request,
+    params,
+    context
+  })
+    .then(data => data.json())
+    .then(data => [parse(data.orgs), parse(data.projects)]);
 
   const queryClient = new QueryClient();
 
-  if (user) {
-    const currentOrg = await prisma.organization.findFirst({
-      where: {
-        id: params.id
-      }
-    });
+  await queryClient.prefetchQuery({
+    queryKey: ['orgs'],
+    queryFn: () => orgs
+  });
 
-    if (!currentOrg) {
-      return redirect('/dashboard');
-    }
+  await queryClient.prefetchQuery({
+    queryKey: ['projects'],
+    queryFn: () => projects
+  });
 
-    const orgs = await prisma.organization.findMany({
-      where: {
-        members: {
-          some: {
-            id: user.id
-          }
-        }
-      }
-    });
-
-    const proj = await prisma.project.findMany({
-      where: {
-        organizationId: currentOrg.id,
-        members: {
-          some: {
-            id: user.id
-          }
-        }
-      }
-    });
-
-    await queryClient.prefetchQuery({
-      queryKey: ['orgs'],
-      queryFn: () => orgs
-    });
-
-    await queryClient.prefetchQuery({
-      queryKey: ['projects'],
-      queryFn: () => proj
-    });
-
-    // const orgMembers = await prisma.project;
-
-    return json({
-      orgs: stringify(orgs),
-      projects: stringify(proj),
-      dehydratedState: dehydrate(queryClient)
-    });
-  }
-};
-
-export const action = async ({ request, params }: ActionFunctionArgs) => {
-  await isLoggedIn(request);
-  const formData = await request.formData();
-  const user = await authenticator.isAuthenticated(request);
-
-  const formDataObj = Object.fromEntries(formData);
-
-  if (formDataObj.intent === 'CREATE_PROJECT' && formDataObj.name && user) {
-    const newOrg = await prisma.project.create({
-      data: {
-        organization: {
-          connect: {
-            id: params.id
-          }
-        },
-        members: {
-          connect: {
-            id: user.id
-          }
-        },
-        name: formDataObj.name.toString()
-      }
-    });
-
-    console.log(newOrg);
-
-    return redirect(`/dashboard/${params.id}/p/${newOrg.id}`);
-  }
+  return json({
+    dehydratedState: dehydrate(queryClient)
+  });
 };
 
 export default function Page() {

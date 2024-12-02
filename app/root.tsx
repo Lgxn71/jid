@@ -49,7 +49,7 @@ export default function AppWithProviders() {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 10 * 1000
+            staleTime: 60 * 1000
           }
         }
       })
