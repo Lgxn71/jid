@@ -1,20 +1,20 @@
-import { type Editor } from "@tiptap/react";
+import { type Editor } from '@tiptap/react';
 import {
   Bold,
   Italic,
   Strikethrough,
   List,
   ListOrdered,
-  CommandIcon,
-} from "lucide-react";
+  CommandIcon
+} from 'lucide-react';
 
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from "~/components/ui/tooltip";
-import { Toggle } from "~/components/ui/toggle";
+  TooltipTrigger
+} from '~/components/ui/tooltip';
+import { Toggle } from '~/components/ui/toggle';
 type Props = {
   editor: Editor | null;
 };
@@ -23,12 +23,12 @@ export default function ToolBar({ editor }: Props) {
     return null;
   }
   return (
-    <div className="border-b group-focus-within:text-[#a4a4a4] text-[#4e4d4d] group-focus-within:border-[#525151] border-[#343434] bg-transparent ">
+    <div className="border-b group-focus-within:text-[#a4a4a4] text-[#4e4d4d] border-border bg-transparent ">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <Toggle
-              pressed={editor.isActive("bold")}
+              pressed={editor.isActive('bold')}
               onPressedChange={() => editor.chain().focus().toggleBold().run()}
               size="sm"
             >
@@ -48,7 +48,7 @@ export default function ToolBar({ editor }: Props) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Toggle
-              pressed={editor.isActive("italic")}
+              pressed={editor.isActive('italic')}
               onPressedChange={() =>
                 editor.chain().focus().toggleItalic().run()
               }
@@ -70,7 +70,7 @@ export default function ToolBar({ editor }: Props) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Toggle
-              pressed={editor.isActive("strike")}
+              pressed={editor.isActive('strike')}
               onPressedChange={() =>
                 editor.chain().focus().toggleStrike().run()
               }
@@ -92,7 +92,7 @@ export default function ToolBar({ editor }: Props) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Toggle
-              pressed={editor.isActive("orderedList")}
+              pressed={editor.isActive('orderedList')}
               onPressedChange={() =>
                 editor.chain().focus().toggleOrderedList().run()
               }
@@ -114,10 +114,10 @@ export default function ToolBar({ editor }: Props) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Toggle
-              pressed={editor.isActive("bulletList")}
-              onPressedChange={() =>
-                editor.chain().focus().toggleBulletList().run()
-              }
+              pressed={editor.isActive('bulletList')}
+              onPressedChange={() => {
+                editor.chain().focus().toggleBulletList().run();
+              }}
               size="sm"
             >
               <List className="h-4 w-4" />

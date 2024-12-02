@@ -6,8 +6,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserContext } from '~/context/userContext';
-
-import TipTap from '~/components/ui/rich-text/tiptap';
+import { generateHTML } from '@tiptap/html'
+import TipTap, { extensions } from '~/components/ui/rich-text/tiptap';
 import { ActionFunctionArgs } from '@remix-run/node';
 import { authenticator, isLoggedIn } from '~/auth.server';
 import { useShape } from '@electric-sql/react';
@@ -24,6 +24,9 @@ import {
   isYesterday
 } from 'date-fns';
 import React from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { cn } from '~/lib/utils';
+import { AnyExtension } from '@tiptap/core';
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   await isLoggedIn(request);
@@ -49,9 +52,10 @@ export default function ChatPage() {
   const user = useContext(UserContext);
   const params = useParams();
   const fetcher = useFetcher();
+  const queryClient = useQueryClient();
 
   const { data: messages } = useShape({
-    url: 'http://localhost:3000/v1/shape',
+    url: 'http://192.168.200.192:3000/v1/shape',
     table: '"Message"',
     where: `"projectId"='${params.chatId}'`
   }) as { data: Message[] };
@@ -59,7 +63,7 @@ export default function ChatPage() {
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
   const textSchema = z.object({
-    description: z.string().min(1).max(500),
+    description: z.string().min(1),
     createdAt: z.number().default(Date.now())
   });
 
@@ -67,9 +71,10 @@ export default function ChatPage() {
     resolver: zodResolver(textSchema),
     mode: 'onChange',
     defaultValues: {
-      description: ''
+      description: '{}'
     }
-  });
+  })
+  console.log(form.getValues().description)
 
   useEffect(() => {
     messageContainerRef.current?.scrollTo({
@@ -86,16 +91,17 @@ export default function ChatPage() {
         method: 'POST'
       }
     );
+    queryClient.invalidateQueries({ queryKey: ['projects'] });
     form.reset({
-      description: ''
+      description: '{}'
     });
   });
 
   return (
     <>
-      <main className="max-h-full h-full relative">
+      <main className="max-h-full h-full relative flex flex-col flex-nowrap">
         <div
-          className="h-full rounded-lg flex w-full flex-col overflow-auto"
+          className="h-full rounded-lg flex w-full flex-col overflow-auto shrink"
           ref={messageContainerRef}
         >
           {messages.map((message, index) => {
@@ -116,25 +122,25 @@ export default function ChatPage() {
 
             return (
               <React.Fragment key={message.id}>
-                <div className="hover:bg-black/10 duration-200 py-2 group">
-                  {shouldDisplayDate && (
-                    <div className="flex justify-center my-4">
-                      <span className="text-xs bg-background text-gray-500 px-2 py-1 rounded-full">
-                        {isToday(messageDate)
-                          ? 'Today'
-                          : isYesterday(messageDate)
-                          ? 'Yesterday'
-                          : format(messageDate, 'MMMM d, yyyy')}
-                      </span>
-                    </div>
-                  )}
+                {shouldDisplayDate && (
+                  <div className="flex justify-center my-4">
+                    <span className="text-xs bg-card px-2 py-1 rounded-full shadow-sm border border-border">
+                      {isToday(messageDate)
+                        ? 'Today'
+                        : isYesterday(messageDate)
+                        ? 'Yesterday'
+                        : format(messageDate, 'MMMM d, yyyy')}
+                    </span>
+                  </div>
+                )}
+                <div className="hover:bg-black/5 dark:hover:bg-white/5 rounded-lg duration-200 group">
                   <div
                     className={`flex items-start ${
                       isNewGroup ? 'mt-4' : 'mt-1 ml-2'
                     }`}
                   >
                     {isNewGroup && (
-                      <Avatar className="mr-2 flex-shrink-0">
+                      <Avatar className="ml-4 size-8 flex-shrink-0">
                         <AvatarImage
                           src={`https://api.dicebear.com/6.x/initials/svg?seed=${message.senderId}`}
                         />
@@ -143,11 +149,9 @@ export default function ChatPage() {
                         </AvatarFallback>
                       </Avatar>
                     )}
-                    <div
-                      className={`flex flex-col ${isNewGroup ? '' : 'ml-10'}`}
-                    >
+                    <div className="flex flex-col">
                       {isNewGroup && (
-                        <div className="flex items-baseline mb-1">
+                        <div className="flex items-baseline mb-1 ml-4">
                           <span className="font-bold mr-2">
                             {message.senderId}
                           </span>
@@ -157,14 +161,22 @@ export default function ChatPage() {
                         </div>
                       )}
                       <div
-                        className="prose prose-sm max-w-none rounded p-1 transition-colors duration-200"
-                        dangerouslySetInnerHTML={{
-                          __html: message.content
-                        }}
-                      />
-                      <span className="text-xs text-gray-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        {format(messageDate, 'h:mm a')}
-                      </span>
+                        className={cn('flex items-start', {
+                          'ml-3': isNewGroup
+                        })}
+                      >
+                        {!isNewGroup && (
+                          <span className="text-[10px] mr-2 text-gray-400 ml-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 mb-2">
+                            {format(messageDate, 'h:mm a')}
+                          </span>
+                        )}
+                        <div
+                          className="prose text-sm max-w-none rounded py-0.5 px-1 transition-colors duration-200"
+                          dangerouslySetInnerHTML={{
+                            __html: generateHTML(JSON.parse(message.content ?? ''), extensions as AnyExtension[])
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -174,7 +186,7 @@ export default function ChatPage() {
         </div>
 
         <Form {...form}>
-          <form onSubmit={onSubmit} className="w-[calc(100%)]">
+          <form onSubmit={onSubmit} className='w-[calc(100vw_-_19.25rem)]'>
             <FormField
               control={form.control}
               name="description"

@@ -24,6 +24,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { authenticator, isLoggedIn, isOnboarded } from "~/auth.server";
 import { prisma } from "~/db.server";
 
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	await isOnboarded(request);
 

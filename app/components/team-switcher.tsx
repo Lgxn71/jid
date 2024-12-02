@@ -1,6 +1,15 @@
-import { Link, useLocation, useNavigate, useParams } from '@remix-run/react';
+import { Organization } from '@prisma/client';
+import {
+  Link,
+  useFetcher,
+  useLocation,
+  useNavigate,
+  useParams
+} from '@remix-run/react';
+import { useQuery } from '@tanstack/react-query';
 import { ChevronsUpDown, Plus } from 'lucide-react';
 import * as React from 'react';
+import { parse } from 'superjson';
 
 import {
   DropdownMenu,
@@ -11,15 +20,21 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger
 } from '~/components/ui/dropdown-menu';
-import { OrgContext } from '~/context/orgContext';
 
 export function TeamSwitcher() {
-  const orgData = React.useContext(OrgContext);
   const navigate = useNavigate();
-  const location = useLocation();
+  const fetcher = useFetcher();
   const params = useParams();
+  const { data: orgData } = useQuery({
+    queryKey: ['orgs']
+  }) as {
+    data: Organization[];
+  };
+
+  console.log(orgData);
+
   const [activeTeam, setActiveTeam] = React.useState(
-    orgData.find(team => team.id === params.id)
+    orgData?.find(team => team.id === params.id)
   );
 
   return (
@@ -48,7 +63,7 @@ export function TeamSwitcher() {
         <DropdownMenuLabel className="text-xs text-muted-foreground">
           Teams
         </DropdownMenuLabel>
-        {orgData.map((team, index) => (
+        {orgData?.map((team, index) => (
           <DropdownMenuItem
             key={team.name}
             onClick={() => {

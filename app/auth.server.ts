@@ -16,7 +16,7 @@ const gitHubStrategy = new GitHubStrategy(
 	{
 		clientId: "Ov23lijW65Dt1sHYF6p6",
 		clientSecret: "09db844047c63350329e9486efa16b4dcc076d8b",
-		redirectURI: "http://localhost:5173/auth/github/callback",
+		redirectURI: "http://192.168.200.192:5173/auth/github/callback",
 	},
 	async ({ profile, tokens, request, context }) => {
 		const newOrExisingAccount = await prisma.user.upsert({

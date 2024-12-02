@@ -10,7 +10,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '~/components/ui/dropdown-menu';
-import { ProjContext } from '~/context/projContext';
 import { cn } from '~/lib/utils';
 import {
   Dialog,
@@ -20,11 +19,14 @@ import {
 } from '~/components/ui/dialog';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { useShape } from '@electric-sql/react';
 import { Project } from '@prisma/client';
+import { useQuery } from '@tanstack/react-query';
 
 export function NavProjects({ className }: React.ComponentProps<'ul'>) {
-  const projects = useContext(ProjContext);
+  const { data: projects } = useQuery({
+    queryKey: ['projects']
+  }) as { data: Project[] };
+
   const params = useParams();
   const [open, setOpen] = useState(false);
   const location = useLocation();
@@ -39,12 +41,16 @@ export function NavProjects({ className }: React.ComponentProps<'ul'>) {
               className={cn(
                 'has-[[data-state=open]]:bg-accent has-[[data-state=open]]:text-accent-foreground group relative rounded-md hover:bg-accent hover:text-accent-foreground',
                 {
-                  'bg-secondary': location.pathname.includes(`chat/${item.id}`)
+                  'bg-secondary': location.pathname.includes(`p/${item.id}`)
                 }
               )}
             >
               <Link
-                to={`chat/${item.id}`}
+                to={
+                  location.pathname.includes('/p/')
+                    ? location.pathname.replace(/(?<=\/p\/)[^\/]+/, item.id)
+                    : `p/${item.id}`
+                }
                 className="flex h-7 items-center gap-2.5 overflow-hidden rounded-md px-1.5 text-xs outline-none ring-ring transition-all hover:bg-accent hover:text-accent-foreground focus-visible:ring-2"
               >
                 <Frame className="h-4 w-4 shrink-0 translate-x-0.5 text-muted-foreground" />
@@ -71,14 +77,6 @@ export function NavProjects({ className }: React.ComponentProps<'ul'>) {
               </DropdownMenu>
             </li>
           ))}
-        <Link
-          to={'kanban/'}
-          className="flex flex-row h-7 items-center gap-2.5 overflow-hidden rounded-md px-1.5 text-xs outline-none ring-ring transition-all hover:bg-accent hover:text-accent-foreground focus-visible:ring-2"
-        >
-          <PlusSquare className="h-4 w-4 shrink-0 translate-x-0.5 text-muted-foreground" />
-          <p>Kanban</p>
-        </Link>
-
         <li>
           <button
             type="button"

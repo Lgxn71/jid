@@ -21,6 +21,17 @@ import { authenticator } from './auth.server';
 import { parse, stringify } from 'superjson';
 import type { User } from '@prisma/client';
 import { UserContext } from './context/userContext';
+import { useState } from 'react';
+import {
+  HydrationBoundary,
+  QueryClient,
+  QueryClientProvider
+} from '@tanstack/react-query';
+import { useDehydratedState } from 'use-dehydrated-state';
+import { broadcastQueryClient } from '@tanstack/query-broadcast-client-experimental';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { getTheme } = await themeSessionResolver(request);
@@ -33,10 +44,34 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function AppWithProviders() {
   const data = useLoaderData<typeof loader>();
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 10 * 1000
+          }
+        }
+      })
+  );
+
+  broadcastQueryClient({
+    queryClient
+  });
+
+  const dehydratedState = useDehydratedState();
+
   return (
-    <ThemeProvider specifiedTheme={data.theme} themeAction="/action/set-theme">
-      <Layout />
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <HydrationBoundary state={dehydratedState}>
+        <ThemeProvider
+          specifiedTheme={data.theme}
+          themeAction="/action/set-theme"
+        >
+          <Layout />
+        </ThemeProvider>
+      </HydrationBoundary>
+    </QueryClientProvider>
   );
 }
 
@@ -70,6 +105,7 @@ function Layout() {
       <body>
         <div id="modal-background" />
         <Toaster />
+        <ReactQueryDevtools />
 
         <UserContext.Provider value={user}>
           <Outlet />

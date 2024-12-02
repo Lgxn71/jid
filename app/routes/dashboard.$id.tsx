@@ -1,17 +1,34 @@
 import type { Organization, Project } from '@prisma/client';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
-import { Outlet, redirect, useLoaderData } from '@remix-run/react';
+import {
+  json,
+  NavLink,
+  Outlet,
+  redirect,
+  useLoaderData,
+  useLocation,
+  useParams
+} from '@remix-run/react';
+import {
+  dehydrate,
+  DehydratedState,
+  HydrationBoundary,
+  QueryClient
+} from '@tanstack/react-query';
 import { parse, stringify } from 'superjson';
 import { authenticator, isLoggedIn } from '~/auth.server';
 import { AppSidebar } from '~/components/app-sidebar';
-import { SidebarLayout, SidebarTrigger } from '~/components/ui/sidebar';
-import { OrgContext } from '~/context/orgContext';
+import { CommandMenu } from '~/components/cmd-k';
+import { SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar';
+import { Tabs, TabsList, TabsTrigger } from '~/components/ui/tabs';
 import { ProjContext } from '~/context/projContext';
 import { prisma } from '~/db.server';
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   await isLoggedIn(request);
   const user = await authenticator.isAuthenticated(request);
+
+  const queryClient = new QueryClient();
 
   if (user) {
     const currentOrg = await prisma.organization.findFirst({
@@ -45,9 +62,22 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
       }
     });
 
-    return stringify({
-      orgs,
-      proj
+    await queryClient.prefetchQuery({
+      queryKey: ['orgs'],
+      queryFn: () => orgs
+    });
+
+    await queryClient.prefetchQuery({
+      queryKey: ['projects'],
+      queryFn: () => proj
+    });
+
+    // const orgMembers = await prisma.project;
+
+    return json({
+      orgs: stringify(orgs),
+      projects: stringify(proj),
+      dehydratedState: dehydrate(queryClient)
     });
   }
 };
@@ -78,33 +108,85 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
     console.log(newOrg);
 
-    return redirect(`/dashboard/${params.id}/chat/${newOrg.id}`);
+    return redirect(`/dashboard/${params.id}/p/${newOrg.id}`);
   }
 };
 
 export default function Page() {
-  const data = parse<{
-    orgs: Organization[];
-    proj: Project[];
-  }>(useLoaderData<typeof loader>());
+  const params = useParams();
+  const location = useLocation();
+  console.log(location);
+  const { dehydratedState } = useLoaderData<typeof loader>();
 
   return (
-    <OrgContext.Provider value={data.orgs}>
-      <ProjContext.Provider value={data.proj}>
-        <SidebarLayout defaultOpen={true}>
-          <AppSidebar />
-          <main className="flex h-full w-full flex-col p-4 transition-all duration-300 ease-in-out">
-            <div className="flex flex-col h-full rounded-md border-2 border-dashed relative">
-              <div className="size-12 flex items-center w-full border-b p-2">
-                <SidebarTrigger />
-              </div>
-              <div className="pb-[7.1rem] h-[calc(100%_-_4rem)] w-full p-2">
-                <Outlet />
-              </div>
-            </div>
-          </main>
-        </SidebarLayout>
-      </ProjContext.Provider>
-    </OrgContext.Provider>
+    <SidebarProvider defaultOpen={true}>
+      <AppSidebar />
+      <main className="flex h-svh w-full flex-col p-4 transition-all duration-300 ease-in-out">
+        <div className="flex flex-col h-full rounded-md border-2 border-dashed relative w-full">
+          <div className="size-12 flex items-center w-full border-b p-2 justify-between">
+            <SidebarTrigger />
+            <Tabs
+              defaultValue={
+                location.pathname.includes('canvas')
+                  ? 'canvas'
+                  : location.pathname.includes('tasks')
+                  ? 'tasks'
+                  : 'chat'
+              }
+            >
+              <TabsList>
+                <TabsTrigger value="chat" asChild>
+                  <NavLink
+                    to={`/dashboard/${params.id}/p/${params.chatId}`}
+                    end
+                    className={({ isActive }) =>
+                      `${
+                        isActive
+                          ? 'bg-background text-foreground'
+                          : 'text-muted-foreground'
+                      } px-4 py-2`
+                    }
+                  >
+                    Chat
+                  </NavLink>
+                </TabsTrigger>
+                <TabsTrigger value="tasks" asChild>
+                  <NavLink
+                    to={`/dashboard/${params.id}/p/${params.chatId}/tasks`}
+                    className={({ isActive }) =>
+                      `${
+                        isActive
+                          ? 'bg-background text-foreground'
+                          : 'text-muted-foreground'
+                      } px-4 py-2`
+                    }
+                  >
+                    Tasks
+                  </NavLink>
+                </TabsTrigger>
+                <TabsTrigger value="canvas" asChild>
+                  <NavLink
+                    to={`/dashboard/${params.id}/p/${params.chatId}/canvas`}
+                    className={({ isActive }) =>
+                      `${
+                        isActive
+                          ? 'bg-background text-foreground'
+                          : 'text-muted-foreground'
+                      } px-4 py-2`
+                    }
+                  >
+                    Canvas
+                  </NavLink>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          <div className="h-[calc(100svh_-_5.5rem)] w-full p-2">
+            <Outlet />
+          </div>
+        </div>
+      </main>
+      <CommandMenu />
+    </SidebarProvider>
   );
 }

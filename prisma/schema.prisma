@@ -8,26 +8,27 @@ datasource db {
 }
 
 model User {
-  id                 String         @id @default(nanoid(6))
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  email              String         @unique
+  id                 String            @id @default(nanoid(6))
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  email              String            @unique
   authProvider       String
   providerId         String?
   profession         String?
   firstName          String
   lastName           String?
-  isOnboarded        Boolean        @default(false)
+  isOnboarded        Boolean           @default(false)
   imageUrl           String?
-  organizations      Organization[] @relation("UserOrganizations")
-  ownedOrganizations Organization[] @relation("OrganizationOwner")
-  projects           Project[]      @relation("ProjectMembers")
-  assignedTasks      Task[]         @relation("UserTasks")
-  sentMessages       Message[]      @relation("SentMessages")
-  receivedMessages   Message[]      @relation("ReceivedMessages")
+  organizations      Organization[]    @relation("UserOrganizations")
+  ownedOrganizations Organization[]    @relation("OrganizationOwner")
+  projects           Project[]         @relation("ProjectMembers")
+  assignedTasks      Task[]            @relation("UserTasks")
+  sentMessages       Message[]         @relation("SentMessages")
+  receivedMessages   Message[]         @relation("ReceivedMessages")
   notifications      Notification[]
   lastReadMessages   LastReadMessage[]
   createdInvitations InvitationLink[]  @relation("InvitationCreator")
+  readReceipts       ReadReceipt[]
 }
 
 model Organization {
@@ -54,13 +55,13 @@ model Project {
   members         User[]            @relation("ProjectMembers")
   Message         Message[]
   LastReadMessage LastReadMessage[]
+  Statuses        Status[]
 }
 
 model Task {
   id          String    @id @default(nanoid(6))
   name        String
   description String?
-  status      String    @default("ToDo")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   project     Project   @relation(fields: [projectId], references: [id])
@@ -68,6 +69,8 @@ model Task {
   assignees   User[]    @relation("UserTasks")
   dueDate     DateTime?
   priority    String    @default("Medium")
+  status      Status    @relation(fields: [statusId], references: [id])
+  statusId    String
 }
 
 model Message {
@@ -81,6 +84,11 @@ model Message {
   project          Project           @relation(fields: [projectId], references: [id])
   projectId        String
   lastReadMessages LastReadMessage[]
+  readByUserIds    String[] // Array of user IDs who have read the message
+  ReadReceipt      ReadReceipt[]
+
+  @@index([senderId])
+  @@index([projectId])
 }
 
 model Notification {
@@ -117,4 +125,25 @@ model InvitationLink {
   organizationId String
   role           String // The role of the invited user in the organization
   email          String? // Optional: email of the invited user if known
+}
+
+model Status {
+  id        String  @id @default(nanoid(6))
+  status    String
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String
+  Task      Task[]
+}
+
+model ReadReceipt {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  readAt    DateTime @default(now())
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@index([userId])
 }
