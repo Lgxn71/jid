@@ -22,7 +22,7 @@ export const KanbanExample: FC = () => {
   // Initialize Yjs document and provider
   const [doc] = useState(() => new Y.Doc());
   const [provider] = useState(
-    () => new WebsocketProvider('ws://192.168.200.192:1234', 'kanban-room', doc)
+    () => new WebsocketProvider('ws://192.168.200.187:1234', 'kanban-room', doc)
   );
 
   // Get a shared Y.Array for features

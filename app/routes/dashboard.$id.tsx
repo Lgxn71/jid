@@ -14,13 +14,14 @@ import {
   QueryClient
 } from '@tanstack/react-query';
 import { parse, stringify } from 'superjson';
-import { authenticator, isLoggedIn } from '~/auth.server';
+import { authenticator, isLoggedIn } from '~/routes/auth+/server';
 import { AppSidebar } from '~/components/app-sidebar';
 import { CommandMenu } from '~/components/cmd-k';
 import { SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '~/components/ui/tabs';
 import { prisma } from '~/db.server';
-import { loader as orgLoader } from '~/routes/api.organization.$id';
+import { loader as orgLoader } from '~/routes/api+/organization+/$id';
+import { loader as userLoader } from '~/routes/api+/organization+/$id.users';
 
 export const loader = async ({
   request,
@@ -35,6 +36,14 @@ export const loader = async ({
     .then(data => data.json())
     .then(data => [parse(data.orgs), parse(data.projects)]);
 
+  const orgUsers = await userLoader({
+    request,
+    params,
+    context
+  })
+    .then(data => data.json())
+    .then(data => parse(data));
+
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
@@ -45,6 +54,11 @@ export const loader = async ({
   await queryClient.prefetchQuery({
     queryKey: ['projects'],
     queryFn: () => projects
+  });
+
+  await queryClient.prefetchQuery({
+    queryKey: [`org_${params.id}_users`],
+    queryFn: () => orgUsers
   });
 
   return json({

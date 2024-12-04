@@ -1,17 +1,17 @@
-import type { ActionFunctionArgs } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
-import { authenticator, isLoggedIn } from '~/auth.server';
+import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
+import { authenticator, isLoggedIn } from '~/routes/auth+/server';
 import { prisma } from '~/db.server';
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   await isLoggedIn(request);
   const formData = await request.formData();
+
   const user = await authenticator.isAuthenticated(request);
 
   const formDataObj = Object.fromEntries(formData);
 
   if (formDataObj.intent === 'CREATE_PROJECT' && formDataObj.name && user) {
-    const newProject = await prisma.project.create({
+    const newOrg = await prisma.project.create({
       data: {
         organization: {
           connect: {
@@ -27,8 +27,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       }
     });
 
-    return json({ project: newProject });
+    return null;
   }
+};
 
-  throw new Error('Invalid request');
-}; 
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {};

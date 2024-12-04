@@ -1,10 +1,10 @@
-import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
-import { authenticator, isOnboarded } from "~/auth.server";
-import { prisma } from "~/db.server";
+import { redirect, type LoaderFunctionArgs } from '@remix-run/node';
+import { authenticator, isOnboarded } from '~/routes/auth+/server';
+import { prisma } from '~/db.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await isOnboarded(request, {
-    hasOrg: true,
+    hasOrg: true
   });
 
   const user = (await authenticator.isAuthenticated(request))!;
@@ -15,19 +15,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         {
           members: {
             some: {
-              id: user.id,
-            },
-          },
+              id: user.id
+            }
+          }
         },
         {
-          ownerId: user.id,
-        },
-      ],
-    },
+          ownerId: user.id
+        }
+      ]
+    }
   });
 
   if (!org) {
-    return redirect("/organization");
+    return redirect('/organization');
   }
 
   return redirect(`/dashboard/${org.id}`);

@@ -6,7 +6,7 @@
 		"app/**/.server/**/*.tsx",
 		"app/**/.client/**/*.ts",
 		"app/**/.client/**/*.tsx"
-, "app/routes/auth.github.tsx"	],
+, "app/routes/auth+/github.tsx"	],
 	"compilerOptions": {
 		"lib": ["DOM", "DOM.Iterable", "ES2022"],
 		"types": ["@remix-run/node", "vite/client"],

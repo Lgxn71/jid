@@ -18,12 +18,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { YKeyValue } from 'y-utility/y-keyvalue';
 import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
-import { IndexeddbPersistence } from 'y-indexeddb'
 
-export function useYjsStore({
+export function useYjsTldrawStore({
   roomId = 'example',
   hostUrl = import.meta.env.MODE === 'development'
-    ? `ws://192.168.200.192:1234`
+    ? `ws://192.168.200.187:1234`
     : 'wss://demos.yjs.dev',
   shapeUtils = []
 }: Partial<{
@@ -49,7 +48,6 @@ export function useYjsStore({
     const yArr = yDoc.getArray<{ key: string; val: TLRecord }>(`tl_${roomId}`);
     const yStore = new YKeyValue(yArr);
     const meta = yDoc.getMap<SerializedSchema>('meta');
-    new IndexeddbPersistence('tldraw', yDoc)
 
     return {
       yDoc,

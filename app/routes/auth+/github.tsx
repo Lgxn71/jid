@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from '@remix-run/node';
 import { redirect } from '@remix-run/node';
-import { authenticator } from '~/auth.server';
+import { authenticator } from '~/routes/auth+/server';
 
 export async function loader() {
   return redirect('/login');

@@ -45,16 +45,14 @@ const CustomHardBreak = HardBreak.extend({
 
 export const extensions = [
   StarterKit.configure({
-    paragraph: {
-      HTMLAttributes: { class: 'mb-3' }
-    },
     blockquote: false,
     bulletList: {
       HTMLAttributes: {
         class: 'list-disc px-4'
       }
     },
-    hardBreak: false
+    hardBreak: false,
+    listItem: false
   }),
   Placeholder.configure({
     placeholder: 'Type your message...',
@@ -103,7 +101,13 @@ function TipTap({
         if (event.key === 'Enter' && !event.shiftKey) {
           // prob rearrange them
           event.preventDefault();
-          onSubmit();
+
+          const text = editor?.state.doc.textContent.trim().length;
+
+          if (text && text > 0) {
+            onSubmit();
+          }
+
           return true;
         }
         return false;

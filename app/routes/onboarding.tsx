@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
-import { authenticator, isLoggedIn } from '~/auth.server';
+import { authenticator, isLoggedIn } from '~/routes/auth+/server';
 import type { User } from '@prisma/client';
 import { parse, stringify } from 'superjson';
 import { redirect, useFetcher, useLoaderData } from '@remix-run/react';

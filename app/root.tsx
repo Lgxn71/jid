@@ -17,7 +17,7 @@ import { themeSessionResolver } from './sessions.server';
 import '~/tailwind.css';
 import { Toaster } from './components/ui/toaster';
 
-import { authenticator } from './auth.server';
+import { authenticator } from './routes/auth+/server';
 import { parse, stringify } from 'superjson';
 import type { User } from '@prisma/client';
 import { UserContext } from './context/userContext';

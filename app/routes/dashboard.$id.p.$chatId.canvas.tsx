@@ -2,7 +2,7 @@ import { useContext, useEffect } from 'react';
 import { Tldraw, useEditor, track } from 'tldraw';
 import 'tldraw/tldraw.css';
 import { UserContext } from '~/context/userContext';
-import { useYjsStore } from '~/hooks/use-yjs-store';
+import { useYjsTldrawStore } from '~/hooks/use-yjs-tldraw-store';
 import { ClientOnly } from 'remix-utils/client-only';
 import { useParams } from '@remix-run/react';
 
@@ -13,9 +13,9 @@ export default function CanvasPage() {
 }
 
 function Canvas({ roomId }: { roomId: string }) {
-  const store = useYjsStore({
+  const store = useYjsTldrawStore({
     roomId: roomId,
-    hostUrl: 'ws://192.168.200.192:1234'
+    hostUrl: 'ws://192.168.200.187:1234'
   });
 
   console.log(roomId);
