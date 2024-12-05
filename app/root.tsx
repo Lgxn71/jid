@@ -29,9 +29,8 @@ import {
 } from '@tanstack/react-query';
 import { useDehydratedState } from 'use-dehydrated-state';
 import { broadcastQueryClient } from '@tanstack/query-broadcast-client-experimental';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster as SonnerToaster } from "~/components/ui/sonner"
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { getTheme } = await themeSessionResolver(request);
@@ -105,6 +104,7 @@ function Layout() {
       <body>
         <div id="modal-background" />
         <Toaster />
+        <SonnerToaster />
         <ReactQueryDevtools />
 
         <UserContext.Provider value={user}>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -11,12 +11,21 @@ import {
   SelectValue
 } from '~/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
-import { X, Upload } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
+import { X, Upload, Link, Check, Copy, RefreshCw } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@remix-run/react';
 import { Organization } from '@prisma/client';
 import { LoaderFunctionArgs } from '@remix-run/node';
 import { loader as dashboardLoader } from '~/routes/dashboard.$id';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '~/components/ui/dialog';
+import { toast } from 'sonner';
 
 // This would typically come from your API or state management
 
@@ -144,33 +153,15 @@ export default function OrganizationSettingsForm() {
               rows={4}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Organization Description</Label>
-            <Textarea
-              id="description"
-              value={orgDescription}
-              className="resize-none h-48"
-              onChange={e => setOrgDescription(e.target.value)}
-              placeholder="Enter organization description"
-              rows={4}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Organization Description</Label>
-            <Textarea
-              id="description"
-              value={orgDescription}
-              className="resize-none h-48"
-              onChange={e => setOrgDescription(e.target.value)}
-              placeholder="Enter organization description"
-              rows={4}
-            />
-          </div>
           <div className="space-y-4">
-            <Label>Members</Label>
+            <div className="flex justify-between items-center">
+              <Label>Members</Label>
+              <InviteDialog />
+            </div>
             {members.map(member => (
               <div key={member.user.id} className="flex items-center space-x-4">
                 <Avatar>
+                  <AvatarImage src={member.user.imageUrl ?? ''} />
                   <AvatarFallback>
                     {member.user.firstName.charAt(0)}
                   </AvatarFallback>
@@ -210,19 +201,118 @@ export default function OrganizationSettingsForm() {
               </div>
             ))}
           </div>
-          <div className="flex space-x-2">
-            <Input
-              placeholder="New member email"
-              value={newMemberEmail}
-              onChange={e => setNewMemberEmail(e.target.value)}
-            />
-            <Button type="button">Add Member</Button>
-          </div>
         </div>
         <div>
           <Button type="submit">Save Changes</Button>
         </div>
       </div>
     </form>
+  );
+}
+
+function InviteDialog() {
+  const [copied, setCopied] = useState(false);
+  const [inviteLink, setInviteLink] = useState('');
+  const [loading, setLoading] = useState(false);
+  const params = useParams();
+
+  const generateInviteLink = useCallback(async () => {
+    const newInviteLink = await fetch(
+      `https://site.localhost/api/organization/invite`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          organizationId: params.id,
+          role: 'Member'
+        })
+      }
+    )
+      .then(data => data.json())
+      .then(
+        data => `https://site.localhost/api/organization/join/${data.token}`
+      );
+
+    setInviteLink(newInviteLink);
+    setCopied(false);
+  }, []);
+
+  const copyToClipboard = async () => {
+    if (!inviteLink) {
+      toast.error('No link generated', {
+        description: 'Please generate an invite link first.'
+      });
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setCopied(true);
+      toast.success('Link copied!', {
+        description: 'The invite link has been copied to your clipboard.'
+      });
+      setTimeout(() => setCopied(false), 3000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  return (
+    <Dialog onOpenChange={open => !open && setInviteLink('')}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          Add members
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[29rem]">
+        <DialogHeader>
+          <DialogTitle>Invite to Organization</DialogTitle>
+          <DialogDescription>
+            Generate and share an invite link to your organization.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex items-center space-x-2">
+          <div className="grid flex-1 gap-2">
+            <Label htmlFor="link" className="sr-only">
+              Link
+            </Label>
+            <Input
+              id="link"
+              value={inviteLink}
+              readOnly
+              placeholder="Click 'Generate' to create an invite link"
+              className="w-[300px]"
+            />
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            className="px-3"
+            onClick={generateInviteLink}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Generate
+          </Button>
+        </div>
+        <Button
+          type="submit"
+          className="w-full mt-2"
+          onClick={copyToClipboard}
+          disabled={!inviteLink}
+        >
+          {copied ? (
+            <Check className="h-4 w-4 mr-2" />
+          ) : (
+            <Copy className="h-4 w-4 mr-2" />
+          )}
+          {copied ? 'Copied!' : 'Copy Link'}
+        </Button>
+        <div className="flex items-center mt-2">
+          <Link className="mr-2 h-4 w-4" />
+          <span className="text-sm text-muted-foreground">
+            Anyone with this link can join this organization
+          </span>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
