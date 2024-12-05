@@ -19,9 +19,10 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
           id: params.id
         },
         {
-          members: {
+          UserOrganization: {
             some: {
-              id: user.id
+              userId: user.id,
+              organizationId: params.id
             }
           }
         }
@@ -35,13 +36,15 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   const orgs = await prisma.organization.findMany({
     where: {
-      members: {
+      UserOrganization: {
         some: {
-          id: user.id
+          userId: user.id
         }
       }
     }
   });
+
+  console.log(orgs)
 
   const projects = await prisma.project.findMany({
     where: {

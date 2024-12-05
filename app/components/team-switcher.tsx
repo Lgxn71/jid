@@ -7,7 +7,7 @@ import {
   useParams
 } from '@remix-run/react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronsUpDown, Plus } from 'lucide-react';
+import { ChevronsUpDown, Plus, Settings } from 'lucide-react';
 import * as React from 'react';
 import { parse } from 'superjson';
 
@@ -23,15 +23,12 @@ import {
 
 export function TeamSwitcher() {
   const navigate = useNavigate();
-  const fetcher = useFetcher();
   const params = useParams();
   const { data: orgData } = useQuery({
     queryKey: ['orgs']
   }) as {
     data: Organization[];
   };
-
-  console.log(orgData);
 
   const [activeTeam, setActiveTeam] = React.useState(
     orgData?.find(team => team.id === params.id)
@@ -60,8 +57,15 @@ export function TeamSwitcher() {
         side="right"
         sideOffset={4}
       >
+        <DropdownMenuItem className="gap-2 items-start text-xs" asChild>
+          <Link to={`/dashboard/${activeTeam?.id}/settings`}>
+            <Settings className="size-3 mt-1 text-muted-foreground" />{' '}
+            Manage Settings for {activeTeam?.name}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuLabel className="text-xs text-muted-foreground">
-          Teams
+          Organization
         </DropdownMenuLabel>
         {orgData?.map((team, index) => (
           <DropdownMenuItem

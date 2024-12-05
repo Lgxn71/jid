@@ -12,44 +12,91 @@ import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { exampleFeatures } from '~/lib/content';
+import { v4 as uuidv4 } from 'uuid';
 
 // Import Yjs and y-websocket
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import { ClientOnly } from 'remix-utils/client-only';
+import { z } from 'zod';
+import {
+  ClientActionFunctionArgs,
+  ClientLoaderFunctionArgs
+} from '@remix-run/react';
+import { getShapeStream, preloadShape } from '@electric-sql/react';
+import { Task } from '@prisma/client';
+import { matchStream } from '~/lib/match-stream';
+import { ActionFunctionArgs } from '@remix-run/node';
+import { authenticator, isLoggedIn } from './auth+/server';
+
+const textSchema = z.object({
+  description: z.string().min(1),
+  createdAt: z.number().default(Date.now()),
+  uuid: z
+    .string()
+    .uuid()
+    .default(() => uuidv4())
+});
+
+const itemShape = (params: Record<string, string | undefined>) => {
+  return {
+    url: new URL(`/api/shape-proxy`, window.location.origin).href,
+    params: {
+      table: '"Task"',
+      where: `ARRAY["projectId"]::text[] <@ ARRAY['${params.chatId}']::text[]`
+    }
+  };
+};
+
+export const action = async ({ request, params }: ActionFunctionArgs) => {
+  await isLoggedIn(request);
+  const user = await authenticator.isAuthenticated(request);
+};
+
+export const clientLoader = async ({ params }: ClientLoaderFunctionArgs) => {
+  return await preloadShape(itemShape(params));
+};
+
+export const clientAction = async ({
+  request,
+  params
+}: ClientActionFunctionArgs) => {
+  const body = await request.formData();
+
+  const uuid = body.get('uuid');
+
+  const itemsStream = getShapeStream<Pick<Task, 'id'>>(itemShape(params));
+
+  // Match the insert
+  const findUpdatePromise = matchStream({
+    stream: itemsStream,
+    operations: [`insert`],
+    matchFn: ({ message }) => {
+      return message.value.id === uuid;
+    }
+  });
+
+  // Generate new UUID and post to backend
+  const fetchPromise = fetch(`/api/project/${params.chatId}/message`, {
+    method: `POST`,
+    body: JSON.stringify({
+      uuid: body.get(`uuid`),
+      content: body.get('content')
+    }),
+    credentials: 'include'
+  });
+
+  return await Promise.all([findUpdatePromise, fetchPromise]);
+};
 
 export const KanbanExample: FC = () => {
   // Initialize Yjs document and provider
   const [doc] = useState(() => new Y.Doc());
   const [provider] = useState(
-    () => new WebsocketProvider('ws://192.168.200.187:1234', 'kanban-room', doc)
+    () => new WebsocketProvider('wss://websocket.localhost', 'kanban-room', doc)
   );
 
-  // Get a shared Y.Array for features
-  const yFeatures = doc.getArray('features');
-
-  const [features, setFeatures] = useState<any[]>([]);
-
-  useEffect(() => {
-    // Initialize features from Yjs or set default if empty
-    if (yFeatures.length === 0) {
-      yFeatures.push(exampleFeatures);
-    } else {
-      setFeatures(yFeatures.toArray());
-    }
-
-    // Observe changes in the shared features array
-    const handleChanges = () => {
-      setFeatures(yFeatures.toArray());
-    };
-    yFeatures.observeDeep(handleChanges);
-
-    return () => {
-      yFeatures.unobserveDeep(handleChanges);
-      provider.disconnect();
-      doc.destroy();
-    };
-  }, [yFeatures, provider]);
+  const [features, setFeatures] = useState(exampleFeatures);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -58,21 +105,21 @@ export const KanbanExample: FC = () => {
       return;
     }
 
-    const status = exampleStatuses.find(s => s.name === over.id);
+    const status = exampleStatuses.find(status => status.name === over.id);
 
     if (!status) {
       return;
     }
 
-    // Update the feature's status in the shared Yjs array
-    const index = yFeatures.toArray().findIndex((f: any) => f.id === active.id);
-    if (index !== -1) {
-      yFeatures.get(index).status = status;
-      yFeatures.doc?.transact(() => {
-        yFeatures.delete(index, 1);
-        yFeatures.insert(index, [yFeatures.get(index)]);
-      });
-    }
+    setFeatures(
+      features.map(feature => {
+        if (feature.id === active.id) {
+          return { ...feature, status };
+        }
+
+        return feature;
+      })
+    );
   };
 
   return (

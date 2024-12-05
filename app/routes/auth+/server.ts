@@ -16,7 +16,7 @@ const gitHubStrategy = new GitHubStrategy(
   {
     clientId: 'Ov23lijW65Dt1sHYF6p6',
     clientSecret: '09db844047c63350329e9486efa16b4dcc076d8b',
-    redirectURI: 'http://192.168.200.187:5173/auth/github/callback'
+    redirectURI: 'https://site.localhost/auth/github/callback'
   },
   async ({ profile, tokens, request, context }) => {
     const newOrExisingAccount = await prisma.user.upsert({
@@ -59,20 +59,9 @@ export const isOnboarded = async (
   }
 
   if (options?.hasOrg) {
-    const org = await prisma.organization.findFirst({
+    const org = await prisma.userOrganization.findFirst({
       where: {
-        OR: [
-          {
-            members: {
-              some: {
-                id: user.id
-              }
-            }
-          },
-          {
-            ownerId: user.id
-          }
-        ]
+        userId: user.id
       }
     });
 

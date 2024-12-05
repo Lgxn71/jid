@@ -106,7 +106,7 @@ export function NavProjects({ className }: React.ComponentProps<'ul'>) {
           <Form
             method="POST"
             navigate={false}
-            action={`/api/organization/${params.id}/project`}
+            action={`/api/project/${params.id}`}
             className="grid gap-4 py-4"
             onSubmit={() => setOpen(false)}
           >

@@ -5,7 +5,7 @@ import {
   isChangeMessage,
 } from "@electric-sql/client"
 
-export async function matchStream<T extends Row<unknown>>({
+export async function matchStream<T extends Row>({
   stream,
   operations,
   matchFn,

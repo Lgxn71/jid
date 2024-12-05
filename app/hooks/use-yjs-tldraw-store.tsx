@@ -44,7 +44,7 @@ export function useYjsTldrawStore({
   });
 
   const { yDoc, yStore, meta, room } = useMemo(() => {
-    const yDoc = new Y.Doc({ gc: true });
+    const yDoc = new Y.Doc({ gc: false });
     const yArr = yDoc.getArray<{ key: string; val: TLRecord }>(`tl_${roomId}`);
     const yStore = new YKeyValue(yArr);
     const meta = yDoc.getMap<SerializedSchema>('meta');
@@ -322,7 +322,7 @@ export function useYjsTldrawStore({
       unsubs.forEach(fn => fn());
       unsubs.length = 0;
     };
-  }, [room, yDoc, store, yStore, meta]);
+  }, [room, yDoc, store, yStore, meta, roomId]);
 
   return storeWithStatus;
 }

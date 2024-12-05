@@ -15,10 +15,8 @@ export default function CanvasPage() {
 function Canvas({ roomId }: { roomId: string }) {
   const store = useYjsTldrawStore({
     roomId: roomId,
-    hostUrl: 'ws://192.168.200.187:1234'
+    hostUrl: 'wss://websocket.localhost'
   });
-
-  console.log(roomId);
 
   return (
     <Tldraw

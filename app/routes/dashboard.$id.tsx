@@ -3,31 +3,33 @@ import {
   json,
   NavLink,
   Outlet,
-  redirect,
   useLoaderData,
   useLocation,
   useParams
 } from '@remix-run/react';
-import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient
-} from '@tanstack/react-query';
-import { parse, stringify } from 'superjson';
+import { dehydrate, QueryClient } from '@tanstack/react-query';
+import { parse } from 'superjson';
 import { authenticator, isLoggedIn } from '~/routes/auth+/server';
 import { AppSidebar } from '~/components/app-sidebar';
 import { CommandMenu } from '~/components/cmd-k';
 import { SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '~/components/ui/tabs';
-import { prisma } from '~/db.server';
 import { loader as orgLoader } from '~/routes/api+/organization+/$id';
 import { loader as userLoader } from '~/routes/api+/organization+/$id.users';
+import { AnimatePresence } from 'motion/react';
 
 export const loader = async ({
   request,
   params,
   context
 }: LoaderFunctionArgs) => {
+  await isLoggedIn(request);
+  const user = await authenticator.isAuthenticated(request);
+
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
   const [orgs, projects] = await orgLoader({
     request,
     params,
@@ -69,8 +71,6 @@ export const loader = async ({
 export default function Page() {
   const params = useParams();
   const location = useLocation();
-  console.log(location);
-  const { dehydratedState } = useLoaderData<typeof loader>();
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -135,7 +135,7 @@ export default function Page() {
               </TabsList>
             </Tabs>
           </div>
-          <div className="h-[calc(100svh_-_5.5rem)] w-full p-2">
+          <div className="h-[calc(100svh_-_5.5rem)] w-full p-2 overflow-scroll">
             <Outlet />
           </div>
         </div>

@@ -1,0 +1,18 @@
+{
+    auto_https disable_redirects
+}
+
+site.localhost {
+    reverse_proxy localhost:5173
+    tls internal
+}
+
+electric.localhost {
+    reverse_proxy localhost:3000
+    tls internal
+}
+
+websocket.localhost {
+    reverse_proxy localhost:1234 
+    tls internal
+}

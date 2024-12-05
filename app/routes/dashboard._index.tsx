@@ -9,20 +9,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const user = (await authenticator.isAuthenticated(request))!;
 
-  const org = await prisma.organization.findFirst({
+  const org = await prisma.userOrganization.findFirst({
     where: {
-      OR: [
-        {
-          members: {
-            some: {
-              id: user.id
-            }
-          }
-        },
-        {
-          ownerId: user.id
-        }
-      ]
+      userId: user.id
     }
   });
 
@@ -30,5 +19,5 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     return redirect('/organization');
   }
 
-  return redirect(`/dashboard/${org.id}`);
+  return redirect(`/dashboard/${org.organizationId}`);
 };

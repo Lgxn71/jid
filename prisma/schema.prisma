@@ -8,39 +8,41 @@ datasource db {
 }
 
 model User {
-  id                 String            @id @default(nanoid(6))
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  email              String            @unique
-  authProvider       String
-  providerId         String?
-  profession         String?
-  firstName          String
-  lastName           String?
-  isOnboarded        Boolean           @default(false)
-  imageUrl           String?
-  organizations      Organization[]    @relation("UserOrganizations")
-  ownedOrganizations Organization[]    @relation("OrganizationOwner")
-  projects           Project[]         @relation("ProjectMembers")
-  assignedTasks      Task[]            @relation("UserTasks")
-  sentMessages       Message[]         @relation("SentMessages")
-  receivedMessages   Message[]         @relation("ReceivedMessages")
+  id           String   @id @default(nanoid(6))
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  email        String   @unique
+  authProvider String
+  providerId   String?
+  profession   String?
+  firstName    String
+  lastName     String?
+  isOnboarded  Boolean  @default(false)
+  imageUrl     String?
+
+  ownedOrganizations Organization[]     @relation("OrganizationOwner")
+  projects           Project[]          @relation("ProjectMembers")
+  assignedTasks      Task[]             @relation("UserTasks")
+  sentMessages       Message[]          @relation("SentMessages")
+  receivedMessages   Message[]          @relation("ReceivedMessages")
   notifications      Notification[]
   lastReadMessages   LastReadMessage[]
-  createdInvitations InvitationLink[]  @relation("InvitationCreator")
+  createdInvitations InvitationLink[]   @relation("InvitationCreator")
   readReceipts       ReadReceipt[]
+  UserOrganization   UserOrganization[]
 }
 
 model Organization {
-  id          String           @id @default(nanoid(6))
-  name        String
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  owner       User             @relation("OrganizationOwner", fields: [ownerId], references: [id])
-  ownerId     String
-  members     User[]           @relation("UserOrganizations")
-  projects    Project[]
-  invitations InvitationLink[]
+  id               String             @id @default(nanoid(6))
+  name             String
+  description      String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  owner            User               @relation("OrganizationOwner", fields: [ownerId], references: [id])
+  ownerId          String
+  projects         Project[]
+  invitations      InvitationLink[]
+  UserOrganization UserOrganization[]
 }
 
 model Project {
@@ -74,7 +76,7 @@ model Task {
 }
 
 model Message {
-  id               String            @id @default(nanoid(6))
+  id               String            @id @default(uuid())
   content          String
   createdAt        DateTime          @default(now())
   sender           User              @relation("SentMessages", fields: [senderId], references: [id])
@@ -146,4 +148,15 @@ model ReadReceipt {
   @@unique([messageId, userId])
   @@index([messageId])
   @@index([userId])
+}
+
+model UserOrganization {
+  id             String       @id @default(nanoid(6))
+  userId         String
+  organizationId String
+  role           String // The role of the user in the organization (e.g., Admin, Member, Viewer)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId]) // Ensure unique relationship per user and organization
 }

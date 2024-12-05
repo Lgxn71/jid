@@ -19,15 +19,18 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
           id: params.id
         },
         {
-          members: {
+          UserOrganization: {
             some: {
-              id: user.id
+              userId: user.id,
+              organizationId: params.id
             }
           }
         }
       ]
     }
   });
+
+  console.log(currentOrg);
 
   if (!currentOrg) {
     throw new Error('Organization not found');
@@ -38,17 +41,25 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
       id: currentOrg.id
     },
     select: {
-      members: {
+      UserOrganization: {
+        where: {
+          organizationId: currentOrg.id
+        },
         select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          imageUrl: true,
-          email: true
+          role: true,
+          user: {
+            select: {
+              email: true,
+              lastName: true,
+              firstName: true,
+              imageUrl: true,
+              id: true
+            }
+          }
         }
       }
     }
   });
 
-  return json(stringify(currentOrgUsers?.members));
+  return json(stringify(currentOrgUsers?.UserOrganization));
 };

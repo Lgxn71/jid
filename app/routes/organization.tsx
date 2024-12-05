@@ -3,7 +3,7 @@ import { redirect, useFetcher, useNavigate } from '@remix-run/react';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { union, z } from 'zod';
 
 import { Sun } from 'lucide-react';
 
@@ -23,6 +23,7 @@ import {
 import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { authenticator, isLoggedIn, isOnboarded } from '~/routes/auth+/server';
 import { prisma } from '~/db.server';
+import { Textarea } from '~/components/ui/textarea';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await isOnboarded(request);
@@ -33,23 +34,24 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   await isLoggedIn(request);
   const formData = await request.formData();
-  console.log(formData);
 
-  console.log('called');
   const user = await authenticator.isAuthenticated(request);
 
   const formDataObj = Object.fromEntries(formData);
 
-  if (formDataObj.intent === 'CREATE' && formDataObj.teamName && user) {
+  console.log(formDataObj.description);
+
+  if (
+    formDataObj.intent === 'CREATE' &&
+    formDataObj.teamName &&
+    formDataObj.description &&
+    user
+  ) {
     const newOrg = await prisma.organization.create({
       data: {
         name: formDataObj.teamName.toString(),
+        description: formDataObj.description.toString(),
         owner: {
-          connect: {
-            id: user.id
-          }
-        },
-        members: {
           connect: {
             id: user.id
           }
@@ -67,22 +69,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
     });
 
-    console.log(newOrg);
+    const userOrganization = await prisma.userOrganization.create({
+      data: {
+        userId: user.id,
+        organizationId: newOrg.id,
+        role: 'Admin'
+      }
+    });
 
     return redirect(`/dashboard/${newOrg.id}`);
   }
 
   if (formDataObj.intent === 'JOIN' && formDataObj.teamID && user) {
-    const updatedOrg = await prisma.organization.update({
-      where: {
-        id: formDataObj.teamID.toString()
-      },
+    const updatedOrg = await prisma.userOrganization.create({
       data: {
-        members: {
-          connect: {
-            id: user.id
-          }
-        }
+        organizationId: formDataObj?.teamId?.toString()!,
+        role: 'Member',
+        userId: user.id
       }
     });
 
@@ -109,16 +112,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
     });
 
-    console.log(updatedOrg);
-
     return redirect(`/dashboard/${updatedOrg.id}`);
   }
 };
 
 const registerTeamSchema = z.object({
   teamName: z.string().min(1).max(50),
+  description: z.string().min(1).max(500),
   companySize: z.string(),
-  logo: z.any().optional()
+  logo: z
+    .any()
+    .refine(file => file.size < 5_000_000, 'Max size is 5MB.')
+    .optional()
+    .nullable()
 });
 
 const joinOrganizationSchema = z.object({
@@ -135,6 +141,7 @@ export default function Page() {
     defaultValues: {
       teamName: '',
       companySize: '',
+      description: '',
       logo: null
     }
   });
@@ -142,6 +149,7 @@ export default function Page() {
   function onSubmitNewOrganization(values: z.infer<typeof registerTeamSchema>) {
     const formData = new FormData();
     formData.append('teamName', values.teamName);
+    formData.append('description', values.description);
     formData.append('intent', 'CREATE');
     // formData.append("companySize", values.companySize);
     // if (values.logo) {
@@ -153,8 +161,6 @@ export default function Page() {
     fetcher.submit(formData, {
       method: 'POST'
     });
-
-    console.log([...formData]);
   }
 
   const joinOrganizationForm = useForm<z.infer<typeof joinOrganizationSchema>>({
@@ -175,13 +181,9 @@ export default function Page() {
       fetcher.submit(formData, {
         method: 'POST'
       });
-
-      console.log([...formData]);
     } catch (error) {
     } finally {
     }
-
-    console.log(values);
   }
 
   return (
@@ -216,6 +218,29 @@ export default function Page() {
                   <FormDescription>
                     This will be the name of your organization{' '}
                   </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={createOrganizationForm.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="description">
+                    Description of your organization
+                  </FormLabel>
+
+                  <FormControl>
+                    <Textarea
+                      className="bg-gray-800 border-gray-700 text-white"
+                      placeholder="Ex: Acme Marketing or Acme Co"
+                      id="description"
+                      {...field}
+                    />
+                  </FormControl>
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -278,7 +303,6 @@ export default function Page() {
                         accept="image/*"
                         onChange={e => {
                           const file = e.target.files?.[0];
-                          console.log(file); // Log the selected file
 
                           if (file) {
                             field.onChange(file); // Pass the file to the form's onChange handler
