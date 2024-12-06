@@ -16,7 +16,8 @@ import { z } from 'zod';
 import {
   ClientActionFunctionArgs,
   ClientLoaderFunctionArgs,
-  useParams
+  useParams,
+  useSubmit
 } from '@remix-run/react';
 import { getShapeStream, preloadShape, useShape } from '@electric-sql/react';
 import { Status, Task, User } from '@prisma/client';
@@ -117,6 +118,11 @@ const createStatusSchema = z.object({
   status: z.string().min(1, 'Status name is required')
 });
 
+const updateTaskSchema = z.object({
+  taskId: z.string(),
+  statusId: z.string()
+});
+
 type CreateStatusFormValues = z.infer<typeof createStatusSchema>;
 
 const CreateStatusDialog: FC = () => {
@@ -212,7 +218,68 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   }
 
   try {
-    const rawData = await request.json();
+    let rawData;
+    const contentType = request.headers.get('content-type');
+    
+    if (contentType?.includes('application/json')) {
+      rawData = await request.json();
+    } else {
+      const formData = await request.formData();
+      rawData = Object.fromEntries(formData);
+    }
+
+    if (rawData.intent === 'UPDATE_TASK_STATUS') {
+      const data = updateTaskSchema.parse({
+        taskId: rawData.taskId,
+        statusId: rawData.statusId
+      });
+
+      // Verify user has access to the project
+      const project = await prisma.project.findFirst({
+        where: {
+          id: params.chatId,
+          members: {
+            some: {
+              id: user.id
+            }
+          }
+        }
+      });
+
+      if (!project) {
+        return json(
+          { error: 'You do not have access to this project' },
+          { status: 403 }
+        );
+      }
+
+      // Verify status belongs to the project
+      const status = await prisma.status.findFirst({
+        where: {
+          id: data.statusId,
+          projectId: params.chatId
+        }
+      });
+
+      if (!status) {
+        return json(
+          { error: 'Invalid status for this project' },
+          { status: 400 }
+        );
+      }
+
+      // Update the task status
+      const task = await prisma.task.update({
+        where: { id: data.taskId },
+        data: { statusId: data.statusId },
+        include: {
+          assignees: true,
+          status: true
+        }
+      });
+
+      return json({ task });
+    }
 
     // Handle status creation
     if (rawData.intent === 'CREATE_STATUS') {
@@ -339,37 +406,37 @@ export const clientLoader = async ({ params }: ClientLoaderFunctionArgs) => {
   return await preloadShape(taskShape(params));
 };
 
-export const clientAction = async ({
-  request,
-  params
-}: ClientActionFunctionArgs) => {
-  const body = await request.formData();
+// export const clientAction = async ({
+//   request,
+//   params
+// }: ClientActionFunctionArgs) => {
+//   const body = await request.formData();
 
-  const uuid = body.get('uuid');
+//   const uuid = body.get('uuid');
 
-  const itemsStream = getShapeStream<Pick<Task, 'id'>>(taskShape(params));
+//   const itemsStream = getShapeStream<Pick<Task, 'id'>>(taskShape(params));
 
-  // Match the insert
-  const findUpdatePromise = matchStream({
-    stream: itemsStream,
-    operations: [`insert`],
-    matchFn: ({ message }) => {
-      return message.value.id === uuid;
-    }
-  });
+//   // Match the insert
+//   const findUpdatePromise = matchStream({
+//     stream: itemsStream,
+//     operations: [`insert`],
+//     matchFn: ({ message }) => {
+//       return message.value.id === uuid;
+//     }
+//   });
 
-  // Generate new UUID and post to backend
-  const fetchPromise = fetch(`/api/project/${params.chatId}/message`, {
-    method: `POST`,
-    body: JSON.stringify({
-      uuid: body.get(`uuid`),
-      content: body.get('content')
-    }),
-    credentials: 'include'
-  });
+//   // Generate new UUID and post to backend
+//   const fetchPromise = fetch(`/api/project/${params.chatId}/message`, {
+//     method: `POST`,
+//     body: JSON.stringify({
+//       uuid: body.get(`uuid`),
+//       content: body.get('content')
+//     }),
+//     credentials: 'include'
+//   });
 
-  return await Promise.all([findUpdatePromise, fetchPromise]);
-};
+//   return await Promise.all([findUpdatePromise, fetchPromise]);
+// };
 
 const createTaskFormSchema = z.object({
   name: z.string().min(1, 'Task name is required'),
@@ -567,6 +634,7 @@ const CreateTaskDialog: FC<{ statuses: Status[]; users: any[] }> = ({
 };
 
 export const KanbanExample: FC = () => {
+  const submit = useSubmit();
   const params = useParams();
   const { data: users } = useQuery<
     {
@@ -640,30 +708,33 @@ export const KanbanExample: FC = () => {
 
   // const [features, setFeatures] = useState(exampleFeatures);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (!over) {
       return;
     }
 
-    const status = statuses
-      .map(status => ({ ...status, color: 'green' }))
-      .find(status => status.status === over.id);
-
+    const status = statuses.find(status => status.status === over.id);
     if (!status) {
       return;
     }
 
-    // setFeatures(
-    //   features.map(feature => {
-    //     if (feature.id === active.id) {
-    //       return { ...feature, status };
-    //     }
+    const taskId = active.id as string;
+    const statusId = status.id;
 
-    //     return feature;
-    //   })
-    // );
+    try {
+      const formData = new FormData();
+      formData.append('intent', 'UPDATE_TASK_STATUS');
+      formData.append('taskId', taskId);
+      formData.append('statusId', statusId);
+
+      submit(formData, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('Error updating task status:', error);
+    }
   };
 
   return (
