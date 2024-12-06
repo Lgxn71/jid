@@ -6,7 +6,7 @@ import {
   KanbanHeader,
   KanbanProvider
 } from '~/components/roadmap-ui/kanban';
-import type { DragEndEvent } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { format, isValid, parseISO } from 'date-fns';
 import { useMemo, useState } from 'react';
 import type { FC } from 'react';
@@ -24,7 +24,12 @@ import { Status, Task, User } from '@prisma/client';
 import { matchStream } from '~/lib/match-stream';
 import { ActionFunctionArgs, json } from '@remix-run/node';
 import { authenticator, isLoggedIn } from './auth+/server';
-import { useQuery } from '@tanstack/react-query';
+import {
+  useQuery,
+  useQueryClient,
+  useMutation,
+  useMutationState
+} from '@tanstack/react-query';
 import { Badge } from '~/components/ui/badge';
 import { prisma } from '~/db.server';
 import { Button } from '~/components/ui/button';
@@ -220,7 +225,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   try {
     let rawData;
     const contentType = request.headers.get('content-type');
-    
+
     if (contentType?.includes('application/json')) {
       rawData = await request.json();
     } else {
@@ -405,38 +410,6 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 export const clientLoader = async ({ params }: ClientLoaderFunctionArgs) => {
   return await preloadShape(taskShape(params));
 };
-
-// export const clientAction = async ({
-//   request,
-//   params
-// }: ClientActionFunctionArgs) => {
-//   const body = await request.formData();
-
-//   const uuid = body.get('uuid');
-
-//   const itemsStream = getShapeStream<Pick<Task, 'id'>>(taskShape(params));
-
-//   // Match the insert
-//   const findUpdatePromise = matchStream({
-//     stream: itemsStream,
-//     operations: [`insert`],
-//     matchFn: ({ message }) => {
-//       return message.value.id === uuid;
-//     }
-//   });
-
-//   // Generate new UUID and post to backend
-//   const fetchPromise = fetch(`/api/project/${params.chatId}/message`, {
-//     method: `POST`,
-//     body: JSON.stringify({
-//       uuid: body.get(`uuid`),
-//       content: body.get('content')
-//     }),
-//     credentials: 'include'
-//   });
-
-//   return await Promise.all([findUpdatePromise, fetchPromise]);
-// };
 
 const createTaskFormSchema = z.object({
   name: z.string().min(1, 'Task name is required'),
@@ -633,7 +606,46 @@ const CreateTaskDialog: FC<{ statuses: Status[]; users: any[] }> = ({
   );
 };
 
+type TaskUpdate = {
+  taskId: string;
+  statusId: string;
+};
+
+async function updateTaskStatus({ taskId, statusId }: TaskUpdate) {
+  const taskStream = getShapeStream<Pick<Task, 'id'>>(
+    taskShape({
+      chatId: window.location.pathname.split('/')[4]
+    })
+  );
+
+  // Match the update
+  const findUpdatePromise = matchStream({
+    stream: taskStream,
+    operations: ['update'],
+    matchFn: ({ message }) => message.value.id === taskId
+  });
+
+  // Update task
+  const formData = new FormData();
+  formData.append('intent', 'UPDATE_TASK_STATUS');
+  formData.append('taskId', taskId);
+  formData.append('statusId', statusId);
+
+  const fetchPromise = fetch(
+    `/dashboard/${window.location.pathname.split('/')[2]}/p/${
+      window.location.pathname.split('/')[4]
+    }/tasks`,
+    {
+      method: 'POST',
+      body: formData
+    }
+  );
+
+  return await Promise.all([findUpdatePromise, fetchPromise]);
+}
+
 export const KanbanExample: FC = () => {
+  const queryClient = useQueryClient();
   const submit = useSubmit();
   const params = useParams();
   const { data: users } = useQuery<
@@ -661,8 +673,79 @@ export const KanbanExample: FC = () => {
     data: { A: string; B: string }[];
   };
 
-  const features = useMemo(() => {
-    return tasks.map(task => {
+  const submissions = useMutationState({
+    filters: { status: 'pending' },
+    select: mutation => mutation.state.context as Task
+  }).filter(task => task !== undefined);
+
+  const [activeDragTask, setActiveDragTask] = useState<{
+    taskId: string;
+    statusId: string;
+  } | null>(null);
+
+  const { mutate: updateTaskStatusMut } = useMutation({
+    mutationKey: ['update-task-status'],
+    mutationFn: updateTaskStatus,
+    onMutate: async newTask => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: ['tasks', params.chatId]
+      });
+
+      // Get the current task from the shape data
+      const currentTask = tasks.find(task => task.id === newTask.taskId);
+      if (!currentTask) return;
+
+      // Create optimistic task
+      const optimisticTask: Task = {
+        ...currentTask,
+        statusId: newTask.statusId
+      };
+
+      // Add to mutation state for optimistic UI
+      return optimisticTask;
+    }
+  });
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over) {
+      return;
+    }
+
+    const status = statuses.find(status => status.status === over.id);
+    if (!status) {
+      return;
+    }
+
+    const taskId = active.id as string;
+    const statusId = status.id;
+
+    try {
+      updateTaskStatusMut({ taskId, statusId });
+    } catch (error) {
+      console.error('Error updating task status:', error);
+    }
+  };
+
+  // Merge data from shape & optimistic data from mutations
+  const tasksMap = new Map<string, Task>();
+
+  // Add all tasks from ElectricSQL shape
+  tasks.forEach(task => {
+    tasksMap.set(task.id, task);
+  });
+
+  // Merge in any optimistic updates from pending mutations
+  submissions.forEach(task => {
+    if (task && tasksMap.has(task.id)) {
+      tasksMap.set(task.id, { ...tasksMap.get(task.id)!, ...task });
+    }
+  });
+
+  const mergedFeatures = useMemo(() => {
+    return [...tasksMap.values()].map(task => {
       const status = statuses.find(status => status.id === task.statusId);
       const assignees = userTasks
         .filter(userTask => userTask.A === task.id)
@@ -690,7 +773,7 @@ export const KanbanExample: FC = () => {
         assignees
       };
     });
-  }, [tasks, users, userTasks, statuses]);
+  }, [tasksMap, users, userTasks, statuses]);
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return <em>Not set</em>;
@@ -704,38 +787,7 @@ export const KanbanExample: FC = () => {
     }
   };
 
-  console.log(features);
-
-  // const [features, setFeatures] = useState(exampleFeatures);
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (!over) {
-      return;
-    }
-
-    const status = statuses.find(status => status.status === over.id);
-    if (!status) {
-      return;
-    }
-
-    const taskId = active.id as string;
-    const statusId = status.id;
-
-    try {
-      const formData = new FormData();
-      formData.append('intent', 'UPDATE_TASK_STATUS');
-      formData.append('taskId', taskId);
-      formData.append('statusId', statusId);
-
-      submit(formData, {
-        method: 'POST'
-      });
-    } catch (error) {
-      console.error('Error updating task status:', error);
-    }
-  };
+  console.log(mergedFeatures);
 
   return (
     <div className="space-y-4">
@@ -748,7 +800,7 @@ export const KanbanExample: FC = () => {
           <KanbanBoard key={status.status} id={status.status}>
             <KanbanHeader name={status.status} color={'green'} />
             <KanbanCards>
-              {features
+              {mergedFeatures
                 .filter(feature => feature?.status?.status === status.status)
                 .map((feature, index) => (
                   <KanbanCard
