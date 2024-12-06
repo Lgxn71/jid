@@ -27,7 +27,7 @@ export function NavProjects({ className }: React.ComponentProps<'ul'>) {
   const { data: projects } = useQuery({
     queryKey: ['projects'],
     queryFn: () =>
-      fetch(`http://${window.location.host}/api/organization/${params.id}`)
+      fetch(`https://${window.location.host}/api/organization/${params.id}`)
         .then(res => res.json())
         .then(data => parse(data.projects))
   }) as { data: Project[] };

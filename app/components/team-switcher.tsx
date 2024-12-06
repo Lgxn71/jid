@@ -25,7 +25,13 @@ export function TeamSwitcher() {
   const navigate = useNavigate();
   const params = useParams();
   const { data: orgData } = useQuery({
-    queryKey: ['orgs']
+    queryKey: ['orgs'],
+    queryFn: async () =>
+      await fetch(
+        `https://${window.location.host}/api/organization/${params.id}`
+      )
+        .then(data => data.json())
+        .then(data => parse(data.orgs))
   }) as {
     data: Organization[];
   };
@@ -59,8 +65,8 @@ export function TeamSwitcher() {
       >
         <DropdownMenuItem className="gap-2 items-start text-xs" asChild>
           <Link to={`/dashboard/${activeTeam?.id}/settings`}>
-            <Settings className="size-3 mt-1 text-muted-foreground" />{' '}
-            Manage Settings for {activeTeam?.name}
+            <Settings className="size-3 mt-1 text-muted-foreground" /> Manage
+            Settings for {activeTeam?.name}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

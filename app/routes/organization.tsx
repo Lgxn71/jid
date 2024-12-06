@@ -24,6 +24,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { authenticator, isLoggedIn, isOnboarded } from '~/routes/auth+/server';
 import { prisma } from '~/db.server';
 import { Textarea } from '~/components/ui/textarea';
+import { createDefaultStatuses } from '~/lib/defaults.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await isOnboarded(request);
@@ -66,8 +67,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             }
           }
         }
+      },
+      include: {
+        projects: true
       }
     });
+
+    await createDefaultStatuses(newOrg.projects[0]!.id);
 
     const userOrganization = await prisma.userOrganization.create({
       data: {

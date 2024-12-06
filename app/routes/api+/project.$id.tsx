@@ -1,6 +1,7 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { authenticator, isLoggedIn } from '~/routes/auth+/server';
 import { prisma } from '~/db.server';
+import { createDefaultStatuses } from '~/lib/defaults.server';
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   await isLoggedIn(request);
@@ -11,7 +12,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   const formDataObj = Object.fromEntries(formData);
 
   if (formDataObj.intent === 'CREATE_PROJECT' && formDataObj.name && user) {
-    const newOrg = await prisma.project.create({
+    const newProject = await prisma.project.create({
       data: {
         organization: {
           connect: {
@@ -26,6 +27,9 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         name: formDataObj.name.toString()
       }
     });
+
+    // Create default statuses for the new project
+    await createDefaultStatuses(newProject.id);
 
     return null;
   }

@@ -2,6 +2,7 @@ import type { ActionFunctionArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { authenticator, isLoggedIn } from '~/routes/auth+/server';
 import { prisma } from '~/db.server';
+import { createDefaultStatuses } from '~/lib/defaults.server';
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   await isLoggedIn(request);
@@ -26,6 +27,9 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         name: formDataObj.name.toString()
       }
     });
+
+    // Create default statuses for the new project
+    await createDefaultStatuses(newProject.id);
 
     return json({ project: newProject });
   }

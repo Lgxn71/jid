@@ -115,7 +115,7 @@ export default function ChatPage() {
     queryKey: [`org_${params.id}_users`],
     queryFn: async () =>
       await fetch(
-        `http://192.168.200.187:5174/api/organization/${params.id}/users`
+        `https://site.localhost/api/organization/${params.id}/users`
       )
         .then(res => res.json())
         .then(

@@ -72,6 +72,8 @@ model Task {
   dueDate     DateTime?
   priority    String    @default("Medium")
   status      Status    @relation(fields: [statusId], references: [id])
+  startAt     DateTime?
+  endAt       DateTime?
   statusId    String
 }
 
