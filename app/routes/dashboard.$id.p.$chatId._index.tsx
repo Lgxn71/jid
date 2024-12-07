@@ -1,104 +1,61 @@
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Form, FormControl, FormField, FormItem } from '~/components/ui/form';
 
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserContext } from '~/context/userContext';
 import { generateHTML } from '@tiptap/html';
 import TipTap, { extensions } from '~/components/ui/rich-text/tiptap';
-import { ActionFunctionArgs } from '@remix-run/node';
-import { authenticator, isLoggedIn } from '~/routes/auth+/server';
-import { getShapeStream, preloadShape, useShape } from '@electric-sql/react';
-import {
-  ClientActionFunctionArgs,
-  ClientLoaderFunctionArgs,
-  useFetcher,
-  useParams
-} from '@remix-run/react';
+import { useShape } from '@electric-sql/react';
+import { useParams } from '@remix-run/react';
 import { Message, User } from '@prisma/client';
-import { prisma } from '~/db.server';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import {
   differenceInMinutes,
   format,
-  formatDistanceToNow,
   isSameDay,
   isToday,
   isYesterday
 } from 'date-fns';
 import React from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { cn } from '~/lib/utils';
 import { AnyExtension } from '@tiptap/core';
 import { parse } from 'superjson';
-import { matchStream } from '~/lib/match-stream';
-import { v4 as uuidv4 } from 'uuid';
-
-const textSchema = z.object({
-  description: z.string().min(1),
-  createdAt: z.number().default(Date.now()),
-  uuid: z
-    .string()
-    .uuid()
-    .default(() => uuidv4())
-});
-
-const itemShape = (params: Record<string, string | undefined>) => {
-  return {
-    url: new URL(`/api/shape-proxy`, window.location.origin).href,
-    params: {
-      table: '"Message"',
-      where: `ARRAY["projectId"]::text[] <@ ARRAY['${params.chatId}']::text[]`
-    }
-  };
-};
-
-export const clientLoader = async ({ params }: ClientLoaderFunctionArgs) => {
-  return await preloadShape(itemShape(params));
-};
-
-export const clientAction = async ({
-  request,
-  params
-}: ClientActionFunctionArgs) => {
-  const body = await request.formData();
-
-  const uuid = body.get('uuid');
-
-  const itemsStream = getShapeStream<Pick<Message, 'id'>>(itemShape(params));
-
-  // Match the insert
-  const findUpdatePromise = matchStream({
-    stream: itemsStream,
-    operations: [`insert`],
-    matchFn: ({ message }) => {
-      return message.value.id === uuid;
-    }
-  });
-
-  // Generate new UUID and post to backend
-  const fetchPromise = fetch(`/api/project/${params.chatId}/message`, {
-    method: `POST`,
-    body: JSON.stringify({
-      uuid: body.get(`uuid`),
-      content: body.get('content')
-    }),
-    credentials: 'include'
-  });
-
-  return await Promise.all([findUpdatePromise, fetchPromise]);
-};
+import { messagesShape } from '~/lib/shapes/message';
+import { messageSchema, useMessageContext } from '~/context/messagesContext';
 
 type UserInfo = Pick<
   User,
   'id' | 'firstName' | 'lastName' | 'email' | 'imageUrl'
 >[];
 
+function formatMessageTimestamp(
+  currentDate: Date,
+  previousDate?: Date
+): string {
+  if (!previousDate || !isSameDay(currentDate, previousDate)) {
+    if (isToday(currentDate)) {
+      return 'Today';
+    } else if (isYesterday(currentDate)) {
+      return 'Yesterday';
+    } else {
+      return format(currentDate, 'MMM d, yyyy');
+    }
+  }
+
+  return format(currentDate, 'h:mm a');
+}
+
 export default function ChatPage() {
   const params = useParams();
-  const fetcher = useFetcher();
+  const { messages, submitMessage } = useMessageContext();
+
+  const displayedMessages = useMemo(
+    () => messages.filter(message => message.projectId === params.chatId),
+    [messages]
+  );
 
   const { data: users } = useQuery<
     {
@@ -114,9 +71,7 @@ export default function ChatPage() {
   >({
     queryKey: [`org_${params.id}_users`],
     queryFn: async () =>
-      await fetch(
-        `https://site.localhost/api/organization/${params.id}/users`
-      )
+      await fetch(`https://site.localhost/api/organization/${params.id}/users`)
         .then(res => res.json())
         .then(
           data =>
@@ -133,41 +88,29 @@ export default function ChatPage() {
         )
   });
 
-  const { data: messages } = useShape(itemShape(params)) as { data: Message[] };
-
   const messageContainerRef = useRef<HTMLDivElement>(null);
 
-  const form = useForm<z.infer<typeof textSchema>>({
-    resolver: zodResolver(textSchema),
+  const form = useForm<z.infer<typeof messageSchema>>({
+    resolver: zodResolver(messageSchema),
     mode: 'onChange',
     defaultValues: {
-      description: '{"type":"doc","content":[]}'
+      content: '{"type":"doc","content":[]}'
     }
   });
 
-  // useEffect(() => {
-  //   messageContainerRef.current?.scrollTo({
-  //     top: messageContainerRef.current.scrollHeight
-  //   });
-  // }, [messages]);
+  const onSubmit = form.handleSubmit(
+    async (values: z.infer<typeof messageSchema>) => {
+      await submitMessage({ ...values });
 
-  const onSubmit = form.handleSubmit((values: z.infer<typeof textSchema>) => {
-    fetcher.submit(
-      {
-        content: values.description,
-        uuid: values.uuid
-      },
-      {
-        method: 'POST'
-      }
-    );
-    messageContainerRef.current?.scrollTo({
-      top: messageContainerRef.current.scrollHeight
-    });
-    form.reset({
-      description: '{"type":"doc","content":[]}'
-    });
-  });
+      messageContainerRef.current?.scrollTo({
+        top: messageContainerRef.current.scrollHeight
+      });
+
+      form.reset({
+        content: '{"type":"doc","content":[]}'
+      });
+    }
+  );
 
   return (
     <>
@@ -176,34 +119,36 @@ export default function ChatPage() {
           className="h-full rounded-lg flex w-full flex-col overflow-auto shrink"
           ref={messageContainerRef}
         >
-          {messages.map((message, index) => {
+          {displayedMessages.map((message, index) => {
             const messageDate = new Date(message.createdAt);
             const prevMessageDate =
               index > 0
-                ? new Date(messages?.[index - 1]?.createdAt ?? '')
+                ? new Date(displayedMessages?.[index - 1]?.createdAt ?? '')
                 : null;
             const isFirstMessageFromUser =
               index === 0 ||
-              messages?.[index - 1]?.senderId !== message.senderId;
+              displayedMessages?.[index - 1]?.senderId !== message.senderId;
             const shouldDisplayDate =
               index === 0 || !isSameDay(messageDate, prevMessageDate!);
+
             const isNewGroup =
               shouldDisplayDate ||
               isFirstMessageFromUser ||
               differenceInMinutes(messageDate, prevMessageDate!) > 5;
 
-            const sender = users?.find(user => user.user.id === message.senderId);
+            const sender = users?.find(
+              user => user.user.id === message.senderId
+            );
 
             return (
               <React.Fragment key={message.id}>
                 {shouldDisplayDate && (
                   <div className="flex justify-center my-4">
                     <span className="text-xs bg-card px-2 py-1 rounded-full shadow-sm border border-border">
-                      {isToday(messageDate)
-                        ? 'Today'
-                        : isYesterday(messageDate)
-                        ? 'Yesterday'
-                        : format(messageDate, 'MMMM d, yyyy')}
+                      {formatMessageTimestamp(
+                        messageDate,
+                        prevMessageDate ?? undefined
+                      )}
                     </span>
                   </div>
                 )}
@@ -267,7 +212,7 @@ export default function ChatPage() {
           <form onSubmit={onSubmit} className="w-[calc(100vw_-_19.25rem)]">
             <FormField
               control={form.control}
-              name="description"
+              name="content"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>

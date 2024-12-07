@@ -16,7 +16,7 @@ import { SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '~/components/ui/tabs';
 import { loader as orgLoader } from '~/routes/api+/organization+/$id';
 import { loader as userLoader } from '~/routes/api+/organization+/$id.users';
-import { AnimatePresence } from 'motion/react';
+import { MessageProvider } from '~/context/messagesContext';
 
 export const loader = async ({
   request,
@@ -73,74 +73,76 @@ export default function Page() {
   const location = useLocation();
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <AppSidebar />
-      <main className="flex h-svh w-full flex-col p-4 transition-all duration-300 ease-in-out">
-        <div className="flex flex-col h-full rounded-md border-2 border-dashed relative w-full">
-          <div className="size-12 flex items-center w-full border-b p-2 justify-between">
-            <SidebarTrigger />
-            <Tabs
-              defaultValue={
-                location.pathname.includes('canvas')
-                  ? 'canvas'
-                  : location.pathname.includes('tasks')
-                  ? 'tasks'
-                  : 'chat'
-              }
-            >
-              <TabsList>
-                <TabsTrigger value="chat" asChild>
-                  <NavLink
-                    to={`/dashboard/${params.id}/p/${params.chatId}`}
-                    end
-                    className={({ isActive }) =>
-                      `${
-                        isActive
-                          ? 'bg-background text-foreground'
-                          : 'text-muted-foreground'
-                      } px-4 py-2`
-                    }
-                  >
-                    Chat
-                  </NavLink>
-                </TabsTrigger>
-                <TabsTrigger value="tasks" asChild>
-                  <NavLink
-                    to={`/dashboard/${params.id}/p/${params.chatId}/tasks`}
-                    className={({ isActive }) =>
-                      `${
-                        isActive
-                          ? 'bg-background text-foreground'
-                          : 'text-muted-foreground'
-                      } px-4 py-2`
-                    }
-                  >
-                    Tasks
-                  </NavLink>
-                </TabsTrigger>
-                <TabsTrigger value="canvas" asChild>
-                  <NavLink
-                    to={`/dashboard/${params.id}/p/${params.chatId}/canvas`}
-                    className={({ isActive }) =>
-                      `${
-                        isActive
-                          ? 'bg-background text-foreground'
-                          : 'text-muted-foreground'
-                      } px-4 py-2`
-                    }
-                  >
-                    Canvas
-                  </NavLink>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+    <MessageProvider>
+      <SidebarProvider defaultOpen={true}>
+        <AppSidebar />
+        <main className="flex h-svh w-full flex-col p-4 transition-all duration-300 ease-in-out">
+          <div className="flex flex-col h-full rounded-md border-2 border-dashed relative w-full">
+            <div className="size-12 flex items-center w-full border-b p-2 justify-between">
+              <SidebarTrigger />
+              <Tabs
+                defaultValue={
+                  location.pathname.includes('canvas')
+                    ? 'canvas'
+                    : location.pathname.includes('tasks')
+                    ? 'tasks'
+                    : 'chat'
+                }
+              >
+                <TabsList>
+                  <TabsTrigger value="chat" asChild>
+                    <NavLink
+                      to={`/dashboard/${params.id}/p/${params.chatId}`}
+                      end
+                      className={({ isActive }) =>
+                        `${
+                          isActive
+                            ? 'bg-background text-foreground'
+                            : 'text-muted-foreground'
+                        } px-4 py-2`
+                      }
+                    >
+                      Chat
+                    </NavLink>
+                  </TabsTrigger>
+                  <TabsTrigger value="tasks" asChild>
+                    <NavLink
+                      to={`/dashboard/${params.id}/p/${params.chatId}/tasks`}
+                      className={({ isActive }) =>
+                        `${
+                          isActive
+                            ? 'bg-background text-foreground'
+                            : 'text-muted-foreground'
+                        } px-4 py-2`
+                      }
+                    >
+                      Tasks
+                    </NavLink>
+                  </TabsTrigger>
+                  <TabsTrigger value="canvas" asChild>
+                    <NavLink
+                      to={`/dashboard/${params.id}/p/${params.chatId}/canvas`}
+                      className={({ isActive }) =>
+                        `${
+                          isActive
+                            ? 'bg-background text-foreground'
+                            : 'text-muted-foreground'
+                        } px-4 py-2`
+                      }
+                    >
+                      Canvas
+                    </NavLink>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            <div className="h-[calc(100svh_-_5.5rem)] w-full p-2 overflow-scroll">
+              <Outlet />
+            </div>
           </div>
-          <div className="h-[calc(100svh_-_5.5rem)] w-full p-2 overflow-scroll">
-            <Outlet />
-          </div>
-        </div>
-      </main>
-      <CommandMenu />
-    </SidebarProvider>
+        </main>
+        <CommandMenu />
+      </SidebarProvider>
+    </MessageProvider>
   );
 }

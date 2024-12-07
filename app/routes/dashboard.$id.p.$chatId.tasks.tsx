@@ -61,6 +61,12 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PlusIcon, ListPlusIcon } from 'lucide-react';
+import {
+  arrayMove,
+  useSortable,
+  SortableContext,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
 
 const textSchema = z.object({
   description: z.string().min(1),

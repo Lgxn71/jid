@@ -30,7 +30,7 @@ import {
 import { useDehydratedState } from 'use-dehydrated-state';
 import { broadcastQueryClient } from '@tanstack/query-broadcast-client-experimental';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { Toaster as SonnerToaster } from "~/components/ui/sonner"
+import { Toaster as SonnerToaster } from '~/components/ui/sonner';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { getTheme } = await themeSessionResolver(request);

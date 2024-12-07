@@ -44,8 +44,6 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     }
   });
 
-  console.log(orgs)
-
   const projects = await prisma.project.findMany({
     where: {
       organizationId: currentOrg.id,
