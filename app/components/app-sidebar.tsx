@@ -38,8 +38,6 @@ export function AppSidebar() {
   const params = useParams();
   const { messages } = useMessageContext();
 
-  console.log(messages);
-
   const notificationCount = useMemo(
     () =>
       messages.reduce(
