@@ -1,6 +1,18 @@
-import { ActionFunctionArgs, json } from '@remix-run/node';
+import { ActionFunctionArgs, LoaderFunctionArgs, json } from '@remix-run/node';
 import { prisma } from '~/db.server';
 import { authenticator, isLoggedIn } from '~/routes/auth+/server';
+
+export const loader = async ({ params }: LoaderFunctionArgs) => {
+  const task = await prisma.task.findUnique({
+    where: { id: params.id },
+    include: {
+      assignees: true,
+      status: true
+    }
+  });
+
+  return json({ task });
+};
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
   await isLoggedIn(request);
@@ -11,7 +23,12 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
     const task = await prisma.task.update({
       where: { id: params.id },
-      data: updates,
+      data: {
+        ...updates,
+        assignees: updates.assigneeIds ? {
+          set: updates.assigneeIds.map((id: string) => ({ id }))
+        } : undefined
+      },
       include: {
         assignees: true,
         status: true

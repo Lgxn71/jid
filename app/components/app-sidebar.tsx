@@ -1,5 +1,5 @@
 import { Link, useParams } from '@remix-run/react';
-import { Bell, Frame, LifeBuoy, Send } from 'lucide-react';
+import { Bell, Frame, LifeBuoy, Send, ListChecks } from 'lucide-react';
 import { useContext, useMemo } from 'react';
 
 import { NavProjects } from '~/components/nav-projects';
@@ -56,6 +56,15 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Personal</SidebarGroupLabel>
+          <Link
+            to={`/dashboard/${params.id}/my-tasks`}
+            className="flex h-7 items-center overflow-hidden rounded-md px-1.5 text-xs outline-none ring-ring transition-all hover:bg-accent hover:text-accent-foreground focus-visible:ring-2"
+          >
+            <ListChecks className="h-4 w-4 shrink-0 translate-x-0.5 text-muted-foreground mr-2.5" />
+            <div className="line-clamp-1 grow overflow-hidden pr-6 font-medium">
+              My Tasks
+            </div>
+          </Link>
           <Link
             to={`/dashboard/${params.id}/notifications`}
             className="flex h-7 items-center overflow-hidden rounded-md px-1.5 text-xs outline-none ring-ring transition-all hover:bg-accent hover:text-accent-foreground focus-visible:ring-2"

@@ -17,7 +17,8 @@ import {
   ClientActionFunctionArgs,
   ClientLoaderFunctionArgs,
   useParams,
-  useSubmit
+  useSubmit,
+  useSearchParams
 } from '@remix-run/react';
 import { getShapeStream, preloadShape, useShape } from '@electric-sql/react';
 import { Status, Task, User } from '@prisma/client';
@@ -67,6 +68,7 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
+import { TaskModal } from '~/components/task-modal';
 
 const textSchema = z.object({
   description: z.string().min(1),
@@ -110,19 +112,11 @@ const userTaskShape = (userIds: string[]) => {
 const createTaskSchema = z.object({
   name: z.string().min(1, 'Task name is required'),
   description: z.string().optional(),
-  statusId: z.string(),
-  assigneeIds: z.array(z.string()).optional(),
+  statusId: z.string({ required_error: 'Status is required' }),
+  assigneeIds: z.array(z.string()).optional().default([]),
   priority: z.enum(['Low', 'Medium', 'High']).default('Medium'),
-  startAt: z
-    .string()
-    .datetime()
-    .optional()
-    .transform(val => (val ? new Date(val) : undefined)),
-  dueDate: z
-    .string()
-    .datetime()
-    .optional()
-    .transform(val => (val ? new Date(val) : undefined))
+  startAt: z.string().optional().nullable(),
+  dueDate: z.string().optional().nullable()
 });
 
 const createStatusSchema = z.object({
@@ -436,23 +430,21 @@ const CreateTaskDialog: FC<{ statuses: Status[]; users: any[] }> = ({
   const [open, setOpen] = useState(false);
   const params = useParams();
 
-  const form = useForm<CreateTaskFormValues>({
-    resolver: zodResolver(createTaskFormSchema),
+  const form = useForm<z.infer<typeof createTaskSchema>>({
+    resolver: zodResolver(createTaskSchema),
     defaultValues: {
-      name: '',
-      description: '',
-      priority: 'Medium'
+      priority: 'Medium',
+      assigneeIds: []
     }
   });
 
-  const onSubmit = async (data: CreateTaskFormValues) => {
+  const onSubmit = async (data: z.infer<typeof createTaskSchema>) => {
     try {
       const formattedData = {
         ...data,
-        startAt: data.startAt
-          ? new Date(data.startAt).toISOString()
-          : undefined,
-        dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined
+        startAt: data.startAt ? new Date(data.startAt).toISOString() : null,
+        dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : null,
+        assigneeIds: data.assigneeIds || []
       };
 
       const response = await fetch(
@@ -602,6 +594,35 @@ const CreateTaskDialog: FC<{ statuses: Status[]; users: any[] }> = ({
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="assigneeIds"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Assignees</FormLabel>
+                  <Select
+                    value={field.value?.join(',') || ''}
+                    onValueChange={(value) => {
+                      field.onChange(value ? value.split(',').filter(Boolean) : []);
+                    }}
+                    multiple
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select assignees" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.map(user => (
+                        <SelectItem key={user.user.id} value={user.user.id}>
+                          {user.user.firstName} {user.user.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <DialogFooter>
               <Button type="submit">Create Task</Button>
             </DialogFooter>
@@ -654,6 +675,7 @@ export const KanbanExample: FC = () => {
   const queryClient = useQueryClient();
   const submit = useSubmit();
   const params = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: users } = useQuery<
     {
       user: {
@@ -815,7 +837,7 @@ export const KanbanExample: FC = () => {
                     name={feature.name}
                     parent={status.status}
                     index={index}
-                    onClick={() => console.log('Feature clicked')}
+                    onClick={() => setSearchParams({ t: feature.id })}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex flex-col gap-1">
@@ -850,6 +872,8 @@ export const KanbanExample: FC = () => {
           </KanbanBoard>
         ))}
       </KanbanProvider>
+      
+      <TaskModal statuses={statuses} users={users} />
     </div>
   );
 };

@@ -25,6 +25,8 @@ import { AnyExtension } from '@tiptap/core';
 import { parse } from 'superjson';
 import { messagesShape } from '~/lib/shapes/message';
 import { messageSchema, useMessageContext } from '~/context/messagesContext';
+import { useMarkMessageRead } from '~/hooks/use-mark-message-read';
+import { UserContext } from '~/context/userContext';
 
 type UserInfo = Pick<
   User,
@@ -51,6 +53,8 @@ function formatMessageTimestamp(
 export default function ChatPage() {
   const params = useParams();
   const { messages, submitMessage } = useMessageContext();
+  const user = useContext(UserContext);
+  const { markAsRead } = useMarkMessageRead();
 
   const displayedMessages = useMemo(() => {
     console.log('hi');
@@ -112,6 +116,33 @@ export default function ChatPage() {
     }
   );
 
+  // Handle message read status
+  useEffect(() => {
+    const unreadMessages = displayedMessages.filter(
+      message => !message.readByUserIds?.includes(user?.id!)
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const messageId = entry.target.getAttribute('data-message-id');
+            if (messageId) {
+              markAsRead(messageId);
+            }
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    // Observe all unread messages
+    const messageElements = document.querySelectorAll('[data-message-id]');
+    messageElements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [displayedMessages, user?.id, markAsRead]);
+
   return (
     <>
       <main className="max-h-full h-full relative flex flex-col flex-nowrap">
@@ -139,6 +170,8 @@ export default function ChatPage() {
             const sender = users?.find(
               user => user.user.id === message.senderId
             );
+
+            const isUnread = !message.readByUserIds?.includes(user?.id!);
 
             return (
               <React.Fragment key={message.id}>
