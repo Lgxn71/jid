@@ -35,18 +35,18 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   await isLoggedIn(request);
   const formData = await request.formData();
-
   const user = await authenticator.isAuthenticated(request);
 
-  const formDataObj = Object.fromEntries(formData);
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
 
-  console.log(formDataObj.description);
+  const formDataObj = Object.fromEntries(formData);
 
   if (
     formDataObj.intent === 'CREATE' &&
     formDataObj.teamName &&
-    formDataObj.description &&
-    user
+    formDataObj.description
   ) {
     const newOrg = await prisma.organization.create({
       data: {
@@ -66,6 +66,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
               }
             }
           }
+        },
+        UserOrganization: {
+          create: {
+            userId: user.id,
+            role: 'Admin'
+          }
         }
       },
       include: {
@@ -75,51 +81,52 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     await createDefaultStatuses(newOrg.projects[0]!.id);
 
-    const userOrganization = await prisma.userOrganization.create({
-      data: {
-        userId: user.id,
-        organizationId: newOrg.id,
-        role: 'Admin'
-      }
-    });
-
     return redirect(`/dashboard/${newOrg.id}`);
   }
 
-  if (formDataObj.intent === 'JOIN' && formDataObj.teamID && user) {
-    const updatedOrg = await prisma.userOrganization.create({
+  if (formDataObj.intent === 'JOIN' && formDataObj.teamId) {
+    console.log('JOIN')
+    const userOrg = await prisma.userOrganization.create({
       data: {
-        organizationId: formDataObj?.teamId?.toString()!,
         role: 'Member',
-        userId: user.id
-      }
-    });
-
-    const defaultProject = await prisma.project.findFirst({
-      where: {
-        organization: {
-          id: updatedOrg.id
-        }
-      }
-    });
-
-    if (!defaultProject) return null;
-
-    await prisma.project.update({
-      where: {
-        id: defaultProject.id
-      },
-      data: {
-        members: {
+        user: {
           connect: {
             id: user.id
+          }
+        },
+        organization: {
+          connect: {
+            id: formDataObj.teamId.toString()
           }
         }
       }
     });
 
-    return redirect(`/dashboard/${updatedOrg.id}`);
+    const defaultProject = await prisma.project.findFirst({
+      where: {
+        organizationId: formDataObj.teamId.toString()
+      }
+    });
+
+    if (defaultProject) {
+      await prisma.project.update({
+        where: {
+          id: defaultProject.id
+        },
+        data: {
+          members: {
+            connect: {
+              id: user.id
+            }
+          }
+        }
+      });
+    }
+
+    return redirect(`/dashboard/${userOrg.organizationId}`);
   }
+
+  throw new Error('Invalid request');
 };
 
 const registerTeamSchema = z.object({

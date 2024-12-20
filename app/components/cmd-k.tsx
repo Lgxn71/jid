@@ -1,16 +1,39 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Command } from 'cmdk';
-import { Loader2 } from 'lucide-react';
-import { useNavigate } from '@remix-run/react';
+import { useState, useEffect } from 'react';
+import {
+  CommandDialog,
+  CommandInput,
+  CommandList
+} from '~/components/ui/command';
+import { Button } from './ui/button';
+import { Loader2, MessageSquare, RefreshCw } from 'lucide-react';
+import { TaskDiffModal } from './task-diff-modal';
+import { Task } from '@prisma/client';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+
+// Configure marked for security
+marked.setOptions({
+  headerIds: false,
+  mangle: false
+});
 
 export function CommandMenu() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [aiResponse, setAiResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const [showTaskDiff, setShowTaskDiff] = useState(false);
+  const [taskDiff, setTaskDiff] = useState<{
+    original?: Task;
+    modified?: Partial<Task>;
+  }>();
+
+  // Parse markdown and sanitize HTML
+  const parsedResponse = aiResponse
+    ? DOMPurify.sanitize(marked.parse(aiResponse))
+    : '';
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -24,19 +47,23 @@ export function CommandMenu() {
     return () => document.removeEventListener('keydown', down);
   }, []);
 
-  const runAICommand = useCallback(async () => {
+  const handleAIChat = async () => {
+    if (!query.trim()) return;
+
     setIsLoading(true);
     setAiResponse('');
 
-    const response = await fetch('/api/ai', {
+    const response = await fetch('/api/ai/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ query })
     });
 
     if (!response.ok) {
       setIsLoading(false);
-      setAiResponse('Failed to get AI response');
+      setAiResponse('Sorry, there was an error processing your request.');
       return;
     }
 
@@ -47,65 +74,89 @@ export function CommandMenu() {
       const { done, value } = await reader!.read();
       if (done) break;
       const chunk = decoder.decode(value);
-      setAiResponse(prev => prev + chunk);
+
+      try {
+        const parsed = JSON.parse(chunk);
+        if (parsed.type === 'task_diff') {
+          setTaskDiff(parsed.data);
+          setShowTaskDiff(true);
+        } else {
+          setAiResponse(prev => prev + parsed.content);
+        }
+      } catch {
+        setAiResponse(prev => prev + chunk);
+      }
     }
 
     setIsLoading(false);
-  }, [query]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAIChat();
+    }
+  };
 
   return (
-    <Command.Dialog
-      open={open}
-      onOpenChange={setOpen}
-      label="Global Command Menu"
-      className="fixed inset-x-0 top-1/4 z-50 w-full max-w-2xl mx-auto overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl animate-in fade-in-0 zoom-in-95"
-    >
-      <div className="border-b border-gray-200 px-4">
-        <Command.Input
-          value={query}
-          onValueChange={setQuery}
-          placeholder="Type a command or ask AI a question..."
-          className="w-full py-3 outline-none placeholder:text-gray-400"
-        />
-      </div>
-      <Command.List className="max-h-[300px] overflow-y-auto p-2">
-        <Command.Empty>No results found.</Command.Empty>
+    <>
+      <CommandDialog open={open} onOpenChange={setOpen}>
+        <div className="flex flex-col h-[80vh]">
+          <div className="flex-1 overflow-auto p-4 space-y-4">
+            {aiResponse && (
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                <div
+                  dangerouslySetInnerHTML={{ __html: parsedResponse }}
+                  className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                />
+              </div>
+            )}
+          </div>
 
-        <Command.Group heading="Actions">
-          <Command.Item
-            onSelect={() => {
-              navigate('/dashboard');
-              setOpen(false);
-            }}
-          >
-            Go to Dashboard
-          </Command.Item>
-          <Command.Item
-            onSelect={() => {
-              navigate('/settings');
-              setOpen(false);
-            }}
-          >
-            Open Settings
-          </Command.Item>
-          <Command.Item onSelect={runAICommand}>Ask AI</Command.Item>
-        </Command.Group>
-
-        {aiResponse && (
-          <Command.Group heading="AI Response">
-            <div className="px-2 py-1.5 text-sm">
-              {isLoading ? (
-                <div className="flex items-center">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Thinking...
-                </div>
-              ) : (
-                aiResponse
+          <div className="border-t p-4">
+            <div className="flex gap-2">
+              <CommandList className="flex-1">
+                <CommandInput
+                  placeholder="Ask about tasks..."
+                  value={query}
+                  onValueChange={setQuery}
+                  onKeyDown={handleKeyDown}
+                />
+              </CommandList>
+              <Button
+                onClick={handleAIChat}
+                disabled={isLoading || !query.trim()}
+                size="icon"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <MessageSquare className="h-4 w-4" />
+                )}
+              </Button>
+              {aiResponse && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    setQuery('');
+                    setAiResponse('');
+                  }}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
               )}
             </div>
-          </Command.Group>
-        )}
-      </Command.List>
-    </Command.Dialog>
+          </div>
+        </div>
+      </CommandDialog>
+
+      <TaskDiffModal
+        open={showTaskDiff}
+        onOpenChange={setShowTaskDiff}
+        original={taskDiff?.original}
+        modified={taskDiff?.modified}
+      />
+    </>
   );
 }
