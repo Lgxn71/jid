@@ -52,10 +52,10 @@ export default function ChatPage() {
   const params = useParams();
   const { messages, submitMessage } = useMessageContext();
 
-  const displayedMessages = useMemo(
-    () => messages.filter(message => message.projectId === params.chatId),
-    [messages]
-  );
+  const displayedMessages = useMemo(() => {
+    console.log('hi');
+    return messages.filter(message => message.projectId === params.chatId);
+  }, [messages, params.chatId]);
 
   const { data: users } = useQuery<
     {
