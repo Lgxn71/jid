@@ -15,7 +15,7 @@ export default function CanvasPage() {
 function Canvas({ roomId }: { roomId: string }) {
   const store = useYjsTldrawStore({
     roomId: roomId,
-    hostUrl: 'wss://websocket.localhost'
+    hostUrl: import.meta.env.VITE_YWEBSOCKET_HOST_URL
   });
 
   return (

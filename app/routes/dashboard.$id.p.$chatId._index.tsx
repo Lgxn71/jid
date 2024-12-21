@@ -75,7 +75,9 @@ export default function ChatPage() {
   >({
     queryKey: [`org_${params.id}_users`],
     queryFn: async () =>
-      await fetch(`https://site.localhost/api/organization/${params.id}/users`)
+      await fetch(
+        `${import.meta.env.VITE_APP_URL}/api/organization/${params.id}/users`
+      )
         .then(res => res.json())
         .then(
           data =>
@@ -123,8 +125,8 @@ export default function ChatPage() {
     );
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             const messageId = entry.target.getAttribute('data-message-id');
             if (messageId) {

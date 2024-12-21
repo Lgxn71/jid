@@ -1,0 +1,11 @@
+version: "2"
+authtoken: "2H8u2cQdEENbZupPUBObiWY6tCt_7bvsoZPt74uwHNgrGtG22"  # Replace with your ngrok auth token
+tunnels:
+  app:
+    addr: 5173  # Your Remix app port
+    proto: http
+    
+  websocket:
+    addr: 1234  # Your WebSocket port
+    proto: http
+    

@@ -213,12 +213,11 @@ export default function OrganizationSettingsForm() {
 function InviteDialog() {
   const [copied, setCopied] = useState(false);
   const [inviteLink, setInviteLink] = useState('');
-  const [loading, setLoading] = useState(false);
   const params = useParams();
 
   const generateInviteLink = useCallback(async () => {
     const newInviteLink = await fetch(
-      `https://site.localhost/api/organization/invite`,
+      `${import.meta.env.VITE_APP_URL}/api/organization/invite`,
       {
         method: 'POST',
         body: JSON.stringify({
@@ -229,7 +228,8 @@ function InviteDialog() {
     )
       .then(data => data.json())
       .then(
-        data => `https://site.localhost/api/organization/join/${data.token}`
+        data =>
+          `${import.meta.env.VITE_APP_URL}/api/organization/join/${data.token}`
       );
 
     setInviteLink(newInviteLink);

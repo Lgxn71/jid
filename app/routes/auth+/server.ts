@@ -14,9 +14,9 @@ export const authenticator = new Authenticator<User>(sessionStorage, {
 
 const gitHubStrategy = new GitHubStrategy(
   {
-    clientId: 'Ov23lijW65Dt1sHYF6p6',
-    clientSecret: '09db844047c63350329e9486efa16b4dcc076d8b',
-    redirectURI: 'https://site.localhost/auth/github/callback'
+    clientId: process.env.GITHUB_CLIENT_ID!,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    redirectURI: process.env.GITHUB_REDIRECT_URI!
   },
   async ({ profile, tokens, request, context }) => {
     const newOrExisingAccount = await prisma.user.upsert({

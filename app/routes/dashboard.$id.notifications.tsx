@@ -26,7 +26,9 @@ export default function NotificationsRoute() {
   >({
     queryKey: [`org_${params.id}_users`],
     queryFn: async () =>
-      await fetch(`https://site.localhost/api/organization/${params.id}/users`)
+      await fetch(
+        `${import.meta.env.VITE_APP_URL}/api/organization/${params.id}/users`
+      )
         .then(res => res.json())
         .then(
           data =>
